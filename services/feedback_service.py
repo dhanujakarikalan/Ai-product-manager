@@ -1,27 +1,46 @@
 from database.database import connection, cursor
 from models.feedback_model import Feedback
-from services.preprocessing import clean_text
-from services.categorization import categorize_feedback
+
+from services.preprocessing import TextPreprocessing
+from services.categorization import FeedbackCategorization
+
+# Create objects
+preprocessor = TextPreprocessing()
+categorizer = FeedbackCategorization()
+
 
 def add_feedback(data: Feedback):
 
-    cleaned_feedback = clean_text(data.feedback)
-    category = categorize_feedback(cleaned_feedback)
+    # Preprocess feedback
+    processed_feedback = preprocessor.preprocess_text(data.feedback)
 
+    # Categorize feedback
+    category = categorizer.categorize_feedback(processed_feedback)
+
+    # Save to database
     cursor.execute(
-        "INSERT INTO feedback (customer, feedback) VALUES (?, ?)",
-        (data.customer, cleaned_feedback)
+        """
+        INSERT INTO feedback (customer, feedback)
+        VALUES (?, ?)
+        """,
+        (
+            data.customer,
+            processed_feedback
+        )
     )
 
     connection.commit()
 
     return {
-    "message": "Feedback saved successfully", 
-    "category": category
-}
+        "message": "Feedback saved successfully",
+        "category": category
+    }
+
 
 def get_all_feedback():
+
     cursor.execute("SELECT * FROM feedback")
+
     rows = cursor.fetchall()
 
     result = []
