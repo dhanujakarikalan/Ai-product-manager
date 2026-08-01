@@ -68,22 +68,19 @@ class DataValidation:
 
     def generate_validation_report(self, df):
 
+        total_missing_values = int(df.isnull().sum().sum())
+
+        missing_columns = self.check_required_columns(df)
+
         report = {
 
-            "Total Rows": len(df),
+            "dataset_valid": len(missing_columns) == 0,
 
-            "Total Columns": len(df.columns),
+            "missing_columns": missing_columns,
 
-            "Missing Columns": self.check_required_columns(df),
+            "total_missing_values": total_missing_values,
 
-            "Missing Values": self.check_missing_values(df).to_dict(),
-
-            "Duplicate Rows": int(self.check_duplicates(df)),
-
-            "Data Types": {
-                column: str(dtype)
-                for column, dtype in self.check_data_types(df).items()
-            }
+            "duplicate_rows": int(self.check_duplicates(df))
 
         }
 

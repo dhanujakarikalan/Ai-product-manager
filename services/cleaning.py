@@ -88,13 +88,13 @@ class DataCleaning:
 
     def cleaning_report(self, before_rows, after_rows):
 
+        rows_removed = before_rows - after_rows
+
         report = {
 
-            "Rows Before Cleaning": before_rows,
+            "status": "Cleaning Completed",
 
-            "Rows After Cleaning": after_rows,
-
-            "Rows Removed": before_rows - after_rows
+            "rows_removed": rows_removed
 
         }
 

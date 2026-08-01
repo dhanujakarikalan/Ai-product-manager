@@ -12,40 +12,29 @@ class FeatureRequestExtraction:
         self.features = {
 
             "Dark Mode":
-                "dark mode dark theme black theme",
+                "dark mode night mode theme",
 
-            "Export to Excel":
-                "export excel spreadsheet xlsx",
+            "Export":
+                "export excel csv pdf download report",
 
-            "Export to PDF":
-                "export pdf download report",
+            "Notifications":
+                "notification alert reminder email",
 
-            "Biometric Login":
-                "fingerprint face id biometric login",
+            "Search":
+                "search filter find lookup",
 
-            "Push Notifications":
-                "push notification alerts reminder",
+            "Dashboard":
+                "dashboard analytics graph chart",
 
-            "Voice Search":
-                "voice search speech recognition",
+            "Authentication":
+                "login authentication password otp security",
 
-            "Advanced Filters":
-                "advanced filter sorting search filter",
-
-            "Multi-language Support":
-                "language translation multilingual",
-
-            "Offline Mode":
-                "offline mode internet connection",
-
-            "Two-Factor Authentication":
-                "2fa otp two factor authentication",
-
-            "Dashboard Customization":
-                "custom dashboard widgets personalization",
+            "Performance":
+                "speed performance optimization faster",
 
             "General":
                 "general feature request"
+
         }
 
         self.feature_embeddings = {
@@ -59,56 +48,9 @@ class FeatureRequestExtraction:
 
         }
 
-    # -----------------------------------------
-    # Keyword Matching
-    # -----------------------------------------
+    def extract_feature(self, feedback):
 
-    def keyword_feature(self, feedback):
-
-        feedback = feedback.lower()
-
-        if "dark mode" in feedback:
-            return "Dark Mode"
-
-        elif "excel" in feedback:
-            return "Export to Excel"
-
-        elif "pdf" in feedback:
-            return "Export to PDF"
-
-        elif "fingerprint" in feedback or "face id" in feedback:
-            return "Biometric Login"
-
-        elif "notification" in feedback:
-            return "Push Notifications"
-
-        elif "voice search" in feedback:
-            return "Voice Search"
-
-        elif "filter" in feedback:
-            return "Advanced Filters"
-
-        elif "language" in feedback:
-            return "Multi-language Support"
-
-        elif "offline" in feedback:
-            return "Offline Mode"
-
-        elif "2fa" in feedback or "two factor" in feedback:
-            return "Two-Factor Authentication"
-
-        elif "custom dashboard" in feedback or "widget" in feedback:
-            return "Dashboard Customization"
-
-        return None
-
-    # -----------------------------------------
-    # Semantic Similarity
-    # -----------------------------------------
-
-    def semantic_feature(self, feedback):
-
-        embedding = self.model.encode(
+        feedback_embedding = self.model.encode(
             feedback,
             convert_to_tensor=True
         )
@@ -116,11 +58,11 @@ class FeatureRequestExtraction:
         best_feature = "General"
         best_score = 0
 
-        for feature, feature_embedding in self.feature_embeddings.items():
+        for feature, embedding in self.feature_embeddings.items():
 
             score = util.cos_sim(
-                embedding,
-                feature_embedding
+                feedback_embedding,
+                embedding
             ).item()
 
             if score > best_score:
@@ -129,23 +71,6 @@ class FeatureRequestExtraction:
                 best_feature = feature
 
         return best_feature
-
-    # -----------------------------------------
-    # Hybrid Approach
-    # -----------------------------------------
-
-    def extract_feature(self, feedback):
-
-        feature = self.keyword_feature(feedback)
-
-        if feature is not None:
-            return feature
-
-        return self.semantic_feature(feedback)
-
-    # -----------------------------------------
-    # DataFrame Processing
-    # -----------------------------------------
 
     def extract_dataframe_features(self, df):
 
@@ -159,4 +84,23 @@ class FeatureRequestExtraction:
             self.extract_feature
         )
 
-        return df
+        feature_counts = (
+            df["feature_request"]
+            .value_counts()
+            .to_dict()
+        )
+
+        feature_summary = {
+
+            "total_feature_requests": len(feature_counts),
+
+            "most_requested_feature": (
+                df["feature_request"].mode()[0]
+                if not df.empty else None
+            ),
+
+            "feature_request_distribution": feature_counts
+
+        }
+
+        return df, feature_summary

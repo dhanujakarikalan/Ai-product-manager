@@ -9,41 +9,26 @@ class ThemeExtraction:
             "sentence-transformers/all-MiniLM-L6-v2"
         )
 
-        # Theme descriptions
         self.themes = {
 
-            "Authentication":
-                "login signup authentication password otp account",
+            "Usability": "easy use user friendly navigation interface",
 
-            "Dashboard":
-                "dashboard homepage analytics charts widgets reports",
+            "Performance": "speed slow lag loading performance",
 
-            "Payments":
-                "payment billing invoice subscription refund transaction",
+            "Reliability": "crash bug error issue failure",
 
-            "Notifications":
-                "notification alerts email sms reminder push notification",
+            "Security": "login password authentication privacy security",
 
-            "Reports":
-                "report export excel pdf csv analytics summary",
+            "Pricing": "price payment subscription refund premium",
 
-            "Search":
-                "search filter sorting find query",
+            "Customer Support": "support help service ticket response",
 
-            "Profile":
-                "profile account settings user information",
+            "Features": "feature functionality enhancement improvement",
 
-            "Performance":
-                "speed loading lag response performance delay",
+            "General": "general feedback"
 
-            "UI":
-                "user interface design layout navigation user experience",
-
-            "General":
-                "general feedback"
         }
 
-        # Create embeddings for themes
         self.theme_embeddings = {
 
             theme: self.model.encode(
@@ -55,66 +40,7 @@ class ThemeExtraction:
 
         }
 
-    # -------------------------------------------------
-    # Keyword-Based Theme Detection
-    # -------------------------------------------------
-
-    def keyword_theme(self, feedback):
-
-        feedback = feedback.lower()
-
-        if any(word in feedback for word in
-               ["login", "signin", "signup", "password", "otp", "authentication"]):
-
-            return "Authentication"
-
-        elif any(word in feedback for word in
-                 ["dashboard", "analytics", "chart", "widget"]):
-
-            return "Dashboard"
-
-        elif any(word in feedback for word in
-                 ["payment", "billing", "refund", "subscription", "invoice"]):
-
-            return "Payments"
-
-        elif any(word in feedback for word in
-                 ["notification", "alert", "email", "sms"]):
-
-            return "Notifications"
-
-        elif any(word in feedback for word in
-                 ["report", "export", "excel", "pdf", "csv"]):
-
-            return "Reports"
-
-        elif any(word in feedback for word in
-                 ["search", "filter", "find"]):
-
-            return "Search"
-
-        elif any(word in feedback for word in
-                 ["profile", "account", "settings"]):
-
-            return "Profile"
-
-        elif any(word in feedback for word in
-                 ["ui", "interface", "layout", "navigation"]):
-
-            return "UI"
-
-        elif any(word in feedback for word in
-                 ["slow", "lag", "performance", "loading", "delay"]):
-
-            return "Performance"
-
-        return None
-
-    # -------------------------------------------------
-    # Semantic Theme Detection
-    # -------------------------------------------------
-
-    def semantic_theme(self, feedback):
+    def extract_theme(self, feedback):
 
         feedback_embedding = self.model.encode(
             feedback,
@@ -138,23 +64,6 @@ class ThemeExtraction:
 
         return best_theme
 
-    # -------------------------------------------------
-    # Hybrid Theme Detection
-    # -------------------------------------------------
-
-    def extract_theme(self, feedback):
-
-        theme = self.keyword_theme(feedback)
-
-        if theme is not None:
-            return theme
-
-        return self.semantic_theme(feedback)
-
-    # -------------------------------------------------
-    # Theme Extraction for DataFrame
-    # -------------------------------------------------
-
     def extract_dataframe_themes(self, df):
 
         if "processed_feedback" not in df.columns:
@@ -167,4 +76,23 @@ class ThemeExtraction:
             self.extract_theme
         )
 
-        return df
+        theme_counts = (
+            df["theme"]
+            .value_counts()
+            .to_dict()
+        )
+
+        theme_summary = {
+
+            "total_themes": len(theme_counts),
+
+            "top_theme": (
+                df["theme"].mode()[0]
+                if not df.empty else None
+            ),
+
+            "theme_distribution": theme_counts
+
+        }
+
+        return df, theme_summary

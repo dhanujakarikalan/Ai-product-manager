@@ -11,44 +11,30 @@ class PainPointExtraction:
 
         self.pain_points = {
 
-            "Slow Login":
-                "login slow authentication delay",
+            "Performance Issue":
+                "slow lag loading delay performance speed",
 
-            "Login Failure":
-                "login failed unable signin authentication error",
+            "Application Crash":
+                "crash error bug failure exception",
 
-            "OTP Failure":
-                "otp verification code not received",
+            "Login Issue":
+                "login authentication password sign in",
 
-            "Dashboard Crash":
-                "dashboard crash freeze error",
+            "Payment Issue":
+                "payment refund subscription billing",
 
-            "Slow Dashboard":
-                "dashboard loading slow lag",
+            "UI Problem":
+                "design interface navigation layout user experience",
 
-            "Payment Failure":
-                "payment failed transaction unsuccessful",
+            "Customer Support":
+                "support help ticket service response",
 
-            "Refund Delay":
-                "refund delayed payment issue",
-
-            "Notification Delay":
-                "notification delayed alerts late",
-
-            "Search Failure":
-                "search not working unable find",
-
-            "Incorrect Search Results":
-                "search incorrect wrong results",
-
-            "Profile Update Failure":
-                "profile update save failed",
-
-            "Report Export Failure":
-                "export report pdf excel failed",
+            "Feature Missing":
+                "missing feature enhancement functionality request",
 
             "General":
                 "general feedback"
+
         }
 
         self.pain_embeddings = {
@@ -62,69 +48,9 @@ class PainPointExtraction:
 
         }
 
-    # ---------------------------------------------
-    # Keyword Matching
-    # ---------------------------------------------
+    def extract_pain_point(self, feedback):
 
-    def keyword_pain(self, feedback):
-
-        feedback = feedback.lower()
-
-        if "login" in feedback and "slow" in feedback:
-            return "Slow Login"
-
-        elif "login" in feedback and (
-            "failed" in feedback or "unable" in feedback
-        ):
-            return "Login Failure"
-
-        elif "otp" in feedback:
-            return "OTP Failure"
-
-        elif "dashboard" in feedback and (
-            "crash" in feedback or "freeze" in feedback
-        ):
-            return "Dashboard Crash"
-
-        elif "dashboard" in feedback and (
-            "slow" in feedback or "loading" in feedback
-        ):
-            return "Slow Dashboard"
-
-        elif "payment" in feedback and "failed" in feedback:
-            return "Payment Failure"
-
-        elif "refund" in feedback:
-            return "Refund Delay"
-
-        elif "notification" in feedback:
-            return "Notification Delay"
-
-        elif "search" in feedback and (
-            "not working" in feedback or "unable" in feedback
-        ):
-            return "Search Failure"
-
-        elif "search" in feedback and (
-            "wrong" in feedback or "incorrect" in feedback
-        ):
-            return "Incorrect Search Results"
-
-        elif "profile" in feedback and "update" in feedback:
-            return "Profile Update Failure"
-
-        elif "export" in feedback:
-            return "Report Export Failure"
-
-        return None
-
-    # ---------------------------------------------
-    # Semantic Similarity
-    # ---------------------------------------------
-
-    def semantic_pain(self, feedback):
-
-        embedding = self.model.encode(
+        feedback_embedding = self.model.encode(
             feedback,
             convert_to_tensor=True
         )
@@ -132,11 +58,11 @@ class PainPointExtraction:
         best_pain = "General"
         best_score = 0
 
-        for pain, pain_embedding in self.pain_embeddings.items():
+        for pain, embedding in self.pain_embeddings.items():
 
             score = util.cos_sim(
-                embedding,
-                pain_embedding
+                feedback_embedding,
+                embedding
             ).item()
 
             if score > best_score:
@@ -145,23 +71,6 @@ class PainPointExtraction:
                 best_pain = pain
 
         return best_pain
-
-    # ---------------------------------------------
-    # Hybrid Extraction
-    # ---------------------------------------------
-
-    def extract_pain_point(self, feedback):
-
-        pain = self.keyword_pain(feedback)
-
-        if pain is not None:
-            return pain
-
-        return self.semantic_pain(feedback)
-
-    # ---------------------------------------------
-    # DataFrame Processing
-    # ---------------------------------------------
 
     def extract_dataframe_pain_points(self, df):
 
@@ -175,4 +84,23 @@ class PainPointExtraction:
             self.extract_pain_point
         )
 
-        return df
+        pain_counts = (
+            df["pain_point"]
+            .value_counts()
+            .to_dict()
+        )
+
+        pain_summary = {
+
+            "total_pain_points": len(pain_counts),
+
+            "top_pain_point": (
+                df["pain_point"].mode()[0]
+                if not df.empty else None
+            ),
+
+            "pain_point_distribution": pain_counts
+
+        }
+
+        return df, pain_summary

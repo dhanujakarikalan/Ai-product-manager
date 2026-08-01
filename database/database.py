@@ -1,18 +1,25 @@
-import sqlite3
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Connect to SQLite database
-connection = sqlite3.connect("feedback.db", check_same_thread=False)
+DATABASE_URL = "sqlite:///./feedback.db"
 
-# Create cursor
-cursor = connection.cursor()
-
-# Create table
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS feedback (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    customer TEXT,
-    feedback TEXT
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}
 )
-""")
 
-connection.commit()
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+Base = declarative_base()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

@@ -1,55 +1,60 @@
-from database.database import connection, cursor
+from sqlalchemy.orm import Session
+
+from database.database import SessionLocal
+from models.feedback_db import Feedback as FeedbackDB
 from models.feedback_model import Feedback
 
 from services.preprocessing import TextPreprocessing
 from services.categorization import FeedbackCategorization
 
-# Create objects
 preprocessor = TextPreprocessing()
 categorizer = FeedbackCategorization()
 
 
 def add_feedback(data: Feedback):
 
-    # Preprocess feedback
-    processed_feedback = preprocessor.preprocess_text(data.feedback)
+    db: Session = SessionLocal()
 
-    # Categorize feedback
-    category = categorizer.categorize_feedback(processed_feedback)
+    try:
+        processed_feedback = preprocessor.preprocess_text(data.feedback)
 
-    # Save to database
-    cursor.execute(
-        """
-        INSERT INTO feedback (customer, feedback)
-        VALUES (?, ?)
-        """,
-        (
-            data.customer,
-            processed_feedback
+        category = categorizer.categorize_feedback(processed_feedback)
+
+        feedback = FeedbackDB(
+            customer=data.customer,
+            feedback=processed_feedback
         )
-    )
 
-    connection.commit()
+        db.add(feedback)
+        db.commit()
+        db.refresh(feedback)
 
-    return {
-        "message": "Feedback saved successfully",
-        "category": category
-    }
+        return {
+            "message": "Feedback saved successfully",
+            "category": category
+        }
+
+    finally:
+        db.close()
 
 
 def get_all_feedback():
 
-    cursor.execute("SELECT * FROM feedback")
+    db: Session = SessionLocal()
 
-    rows = cursor.fetchall()
+    try:
+        feedbacks = db.query(FeedbackDB).all()
 
-    result = []
+        result = []
 
-    for row in rows:
-        result.append({
-            "id": row[0],
-            "customer": row[1],
-            "feedback": row[2]
-        })
+        for item in feedbacks:
+            result.append({
+                "id": item.id,
+                "customer": item.customer,
+                "feedback": item.feedback
+            })
 
-    return result
+        return result
+
+    finally:
+        db.close()

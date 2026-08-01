@@ -88,24 +88,21 @@ class DataEDA:
     # ----------------------------------------
     # Complete EDA Report
     # ----------------------------------------
-
     def generate_eda_report(self, df):
 
         report = {
 
-            "Dataset Summary": self.dataset_summary(df),
+            "total_rows": df.shape[0],
 
-            "Missing Values": self.missing_values(df),
+            "total_columns": df.shape[1],
 
-            "Duplicate Rows": self.duplicate_rows(df),
+            "source_distribution": self.source_distribution(df),
 
-            "Source Distribution": self.source_distribution(df),
+            "product_distribution": self.product_distribution(df),
 
-            "Product Distribution": self.product_distribution(df),
+            "rating_distribution": self.rating_distribution(df),
 
-            "Rating Distribution": self.rating_distribution(df),
-
-            "Feedback Length": self.feedback_length(df)
+            "feedback_length": self.feedback_length(df)
 
         }
 

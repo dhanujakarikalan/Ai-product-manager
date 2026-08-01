@@ -40,6 +40,7 @@ class FeedbackCategorization:
                 "general feedback"
         }
 
+        # Generate embeddings for category descriptions
         self.category_embeddings = {
 
             category: self.model.encode(
@@ -61,37 +62,30 @@ class FeedbackCategorization:
 
         if any(word in feedback for word in
                ["crash", "bug", "error", "issue", "failure"]):
-
             return "Bug"
 
         elif any(word in feedback for word in
                  ["feature", "add", "enhancement", "request"]):
-
             return "Feature Request"
 
         elif any(word in feedback for word in
                  ["slow", "lag", "performance", "delay"]):
-
             return "Performance"
 
         elif any(word in feedback for word in
                  ["login", "password", "security", "authentication"]):
-
             return "Security"
 
         elif any(word in feedback for word in
                  ["price", "payment", "refund", "subscription"]):
-
             return "Pricing"
 
         elif any(word in feedback for word in
                  ["good", "excellent", "great", "love", "amazing"]):
-
             return "Praise"
 
         elif any(word in feedback for word in
                  ["support", "ticket", "help", "service"]):
-
             return "Customer Support"
 
         return None
@@ -149,8 +143,28 @@ class FeedbackCategorization:
                 "processed_feedback column not found."
             )
 
+        # Categorize feedback
         df["category"] = df["processed_feedback"].apply(
             self.categorize_feedback
         )
 
-        return df
+        # Generate summary
+        category_counts = (
+            df["category"]
+            .value_counts()
+            .to_dict()
+        )
+
+        categorization_summary = {
+
+            "total_categories": len(category_counts),
+
+            "top_category": (
+                df["category"].mode()[0]
+                if not df.empty else None
+            ),
+
+            "category_distribution": category_counts
+        }
+
+        return df, categorization_summary

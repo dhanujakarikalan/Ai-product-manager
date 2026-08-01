@@ -12,15 +12,15 @@ class TrendAnalysis:
 
     def category_trends(self, df):
 
-        return (
+        trend = (
             df["category"]
             .value_counts()
             .reset_index()
-            .rename(columns={
-                "index": "Category",
-                "category": "Count"
-            })
         )
+
+        trend.columns = ["Category", "Count"]
+
+        return trend.to_dict(orient="records")
 
     # -----------------------------------------
     # Theme Trends
@@ -28,15 +28,15 @@ class TrendAnalysis:
 
     def theme_trends(self, df):
 
-        return (
+        trend = (
             df["theme"]
             .value_counts()
             .reset_index()
-            .rename(columns={
-                "index": "Theme",
-                "theme": "Count"
-            })
         )
+
+        trend.columns = ["Theme", "Count"]
+
+        return trend.to_dict(orient="records")
 
     # -----------------------------------------
     # Pain Point Trends
@@ -44,15 +44,15 @@ class TrendAnalysis:
 
     def pain_point_trends(self, df):
 
-        return (
+        trend = (
             df["pain_point"]
             .value_counts()
             .reset_index()
-            .rename(columns={
-                "index": "Pain Point",
-                "pain_point": "Count"
-            })
         )
+
+        trend.columns = ["Pain Point", "Count"]
+
+        return trend.to_dict(orient="records")
 
     # -----------------------------------------
     # Feature Request Trends
@@ -60,15 +60,15 @@ class TrendAnalysis:
 
     def feature_request_trends(self, df):
 
-        return (
+        trend = (
             df["feature_request"]
             .value_counts()
             .reset_index()
-            .rename(columns={
-                "index": "Feature",
-                "feature_request": "Count"
-            })
         )
+
+        trend.columns = ["Feature", "Count"]
+
+        return trend.to_dict(orient="records")
 
     # -----------------------------------------
     # Sentiment Trends
@@ -76,15 +76,15 @@ class TrendAnalysis:
 
     def sentiment_trends(self, df):
 
-        return (
+        trend = (
             df["sentiment"]
             .value_counts()
             .reset_index()
-            .rename(columns={
-                "index": "Sentiment",
-                "sentiment": "Count"
-            })
         )
+
+        trend.columns = ["Sentiment", "Count"]
+
+        return trend.to_dict(orient="records")
 
     # -----------------------------------------
     # Generate Complete Report
@@ -94,20 +94,15 @@ class TrendAnalysis:
 
         report = {
 
-            "Category Trends":
-                self.category_trends(df),
+            "category_trends": self.category_trends(df),
 
-            "Theme Trends":
-                self.theme_trends(df),
+            "theme_trends": self.theme_trends(df),
 
-            "Pain Point Trends":
-                self.pain_point_trends(df),
+            "pain_point_trends": self.pain_point_trends(df),
 
-            "Feature Request Trends":
-                self.feature_request_trends(df),
+            "feature_request_trends": self.feature_request_trends(df),
 
-            "Sentiment Trends":
-                self.sentiment_trends(df)
+            "sentiment_trends": self.sentiment_trends(df)
 
         }
 
