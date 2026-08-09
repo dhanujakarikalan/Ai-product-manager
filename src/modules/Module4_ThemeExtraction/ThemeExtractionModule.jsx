@@ -3,9 +3,34 @@ import { useApp } from '../../context/AppContext';
 import { Sparkles, Layers, ArrowRight, CheckCircle2, AlertCircle, HelpCircle, TrendingUp, Filter, PlusCircle } from 'lucide-react';
 
 export const ThemeExtractionModule = () => {
-  const { data, promoteThemeToFeature, setActiveModule } = useApp();
+  const { data, promoteThemeToFeature, setActiveModule, addTheme, deleteTheme } = useApp();
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [activeDrawerTheme, setActiveDrawerTheme] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newCategory, setNewCategory] = useState('Dashboard');
+  const [newSummary, setNewSummary] = useState('');
+  const [newSeverity, setNewSeverity] = useState('Medium');
+
+  const handleCreateTheme = (e) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+
+    addTheme({
+      id: `theme-${Date.now()}`,
+      title: newTitle,
+      category: newCategory,
+      severity: newSeverity,
+      ticketCount: Math.floor(Math.random() * 80) + 20,
+      affectedArr: '$120K',
+      aiSummary: newSummary || 'User reported friction and requested enhancements in this module.',
+      status: 'Active'
+    });
+
+    setNewTitle('');
+    setNewSummary('');
+    setShowAddModal(false);
+  };
 
   const filteredThemes = data.themes.filter(t => 
     selectedCategory === 'ALL' || t.category.toLowerCase().includes(selectedCategory.toLowerCase())
@@ -13,41 +38,48 @@ export const ThemeExtractionModule = () => {
 
   return (
     <div className="animate-fade-in">
-      <div className="module-header">
+      <div className="module-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <span className="badge badge-primary" style={{ marginBottom: '8px' }}>Module 4: NLP Auto-Clustering</span>
-          <h1 style={{ fontSize: '1.75rem' }}>Feedback Classification & Theme Extraction Engine</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Generative AI automatically groups raw support tickets, sales transcripts, and reviews into actionable root-cause themes.
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Theme Extraction</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
+            AI automatically groups customer feedback into actionable themes.
           </p>
         </div>
+        <button 
+          className="btn btn-primary btn-sm" 
+          onClick={() => setShowAddModal(true)}
+          style={{ gap: '6px' }}
+        >
+          <PlusCircle size={15} />
+          <span>+ Add Custom Theme</span>
+        </button>
       </div>
 
       <div className="module-body">
         {/* Category Filters */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
           {['ALL', 'Core Infrastructure', 'Dashboard', 'Security', 'Workflow Automation'].map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className="btn"
               style={{
-                padding: '8px 16px',
-                borderRadius: '9999px',
+                padding: '6px 14px',
+                borderRadius: '8px',
                 fontSize: '0.8rem',
-                backgroundColor: selectedCategory === cat ? 'var(--primary)' : 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: selectedCategory === cat ? 'var(--primary)' : 'rgba(255, 255, 255, 0.04)',
                 color: selectedCategory === cat ? '#fff' : 'var(--text-muted)',
                 border: '1px solid',
                 borderColor: selectedCategory === cat ? 'var(--primary)' : 'var(--border-color)'
               }}
             >
-              {cat === 'ALL' ? 'All AI Clusters' : cat}
+              {cat === 'ALL' ? 'All Clusters' : cat}
             </button>
           ))}
         </div>
 
         {/* Themes Grid */}
-        <div className="grid-2" style={{ gap: '20px' }}>
+        <div className="grid-2" style={{ gap: '16px' }}>
           {filteredThemes.map(theme => {
             const isCritical = theme.severity === 'Critical';
             const isHigh = theme.severity === 'High';
@@ -58,16 +90,15 @@ export const ThemeExtractionModule = () => {
                 key={theme.id} 
                 className="glass-card" 
                 style={{ 
-                  padding: '22px', 
+                  padding: '20px', 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  justifyContent: 'space-between',
-                  borderTop: isCritical ? '3px solid #f43f5e' : isHigh ? '3px solid #f59e0b' : '3px solid #6366f1'
+                  justifyContent: 'space-between'
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       {theme.category}
                     </span>
                     <span className={`badge ${isCritical ? 'badge-danger' : isHigh ? 'badge-warning' : 'badge-primary'}`}>
@@ -75,28 +106,22 @@ export const ThemeExtractionModule = () => {
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: '1.18rem', marginBottom: '10px', color: 'var(--text-main)' }}>{theme.title}</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '8px', color: 'var(--text-main)' }}>{theme.title}</h3>
 
-                  <div className="glass-panel" style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '10px', marginBottom: '16px', borderLeft: '2px solid var(--primary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', color: '#818cf8', fontSize: '0.76rem', fontWeight: 600 }}>
-                      <Sparkles size={13} />
-                      <span>AI Root Cause Synthesis</span>
-                    </div>
-                    <p style={{ fontSize: '0.83rem', lineHeight: 1.5, color: 'var(--text-muted)' }}>
-                      "{theme.aiSummary}"
-                    </p>
-                  </div>
+                  <p style={{ fontSize: '0.85rem', lineHeight: 1.5, color: 'var(--text-muted)', marginBottom: '16px' }}>
+                    "{theme.aiSummary}"
+                  </p>
                 </div>
 
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', marginBottom: '16px', fontSize: '0.82rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: '1px solid var(--border-color)', marginBottom: '14px', fontSize: '0.8rem' }}>
                     <div>
-                      <span style={{ color: 'var(--text-dim)' }}>Aggregated Tickets: </span>
-                      <strong style={{ color: 'var(--text-main)' }}>{theme.ticketCount} items</strong>
+                      <span style={{ color: 'var(--text-dim)' }}>Tickets: </span>
+                      <strong style={{ color: 'var(--text-main)' }}>{theme.ticketCount}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-dim)' }}>ARR Opportunity: </span>
-                      <strong style={{ color: isCritical ? '#fb7185' : '#34d399' }}>{theme.affectedArr}</strong>
+                      <span style={{ color: 'var(--text-dim)' }}>ARR Impact: </span>
+                      <strong style={{ color: isCritical ? '#f43f5e' : '#10b981' }}>{theme.affectedArr}</strong>
                     </div>
                   </div>
 
@@ -185,6 +210,72 @@ export const ThemeExtractionModule = () => {
                   <span>Promote this Cluster to Feature Backlog</span>
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+        {showAddModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100
+          }}>
+            <div className="glass-panel animate-fade-in" style={{ width: '500px', padding: '24px' }}>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>Add Custom Theme</h3>
+              <form onSubmit={handleCreateTheme} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '4px' }}>Theme Title</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    placeholder="e.g. Dashboard Performance Lag" 
+                    value={newTitle} 
+                    onChange={e => setNewTitle(e.target.value)} 
+                    required 
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '4px' }}>Category</label>
+                    <select className="input-field" value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+                      <option value="Dashboard">Dashboard</option>
+                      <option value="Core Infrastructure">Core Infrastructure</option>
+                      <option value="Security">Security</option>
+                      <option value="Workflow Automation">Workflow Automation</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '4px' }}>Severity</label>
+                    <select className="input-field" value={newSeverity} onChange={e => setNewSeverity(e.target.value)}>
+                      <option value="Critical">Critical</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '4px' }}>AI Summary / Description</label>
+                  <textarea 
+                    className="input-field" 
+                    rows={3} 
+                    placeholder="Describe the root-cause feedback theme..." 
+                    value={newSummary} 
+                    onChange={e => setNewSummary(e.target.value)} 
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary">Create Theme</button>
+                </div>
+              </form>
             </div>
           </div>
         )}

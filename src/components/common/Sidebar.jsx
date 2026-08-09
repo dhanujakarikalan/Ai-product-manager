@@ -2,12 +2,18 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   LayoutDashboard, 
-  UploadCloud, 
-  MessageSquare, 
-  FileText, 
-  Settings, 
+  Inbox,
+  BarChart3,
+  Layers,
+  Lightbulb,
+  Sliders,
+  FileText,
+  Map,
+  Bot,
+  Settings,
   Sparkles,
-  Lock
+  Lock,
+  BookOpen
 } from 'lucide-react';
 
 export const Sidebar = () => {
@@ -16,9 +22,11 @@ export const Sidebar = () => {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, requiredPermission: null },
-    { id: 'upload', label: 'Data Upload', icon: UploadCloud, requiredPermission: null },
-    { id: 'chat', label: 'Chat Interface', icon: MessageSquare, requiredPermission: null },
-    { id: 'reports', label: 'Reports', icon: FileText, requiredPermission: null },
+    { id: 'upload', label: 'Data Upload', icon: Inbox, requiredPermission: null },
+    { id: 'themes', label: 'Theme Extraction', icon: Layers, requiredPermission: null },
+    { id: 'stories', label: 'User Stories', icon: BookOpen, requiredPermission: null },
+    { id: 'prd', label: 'PRD Generator', icon: FileText, requiredPermission: null },
+    { id: 'chat', label: 'AI Assistant', icon: Bot, requiredPermission: null },
     { id: 'settings', label: 'Settings', icon: Settings, requiredPermission: 'manage_settings' }
   ];
 
@@ -44,7 +52,7 @@ export const Sidebar = () => {
           width: '36px',
           height: '36px',
           borderRadius: '10px',
-          background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+          background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -54,7 +62,7 @@ export const Sidebar = () => {
         </div>
         <div>
           <h3 style={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.2 }}>AI Copilot</h3>
-          <span style={{ fontSize: '0.72rem', color: role === 'Admin' ? '#fb7185' : role === 'Analyst' ? '#34d399' : 'var(--accent-cyan)', fontWeight: 700, textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '0.72rem', color: role === 'Admin' ? '#fb7185' : role === 'Analyst' ? '#34d399' : '#818cf8', fontWeight: 700, textTransform: 'uppercase' }}>
             {role}
           </span>
         </div>
@@ -88,9 +96,9 @@ export const Sidebar = () => {
                   padding: '12px 14px',
                   borderRadius: '10px',
                   border: '1px solid',
-                  borderColor: isActive ? 'rgba(99, 102, 241, 0.4)' : 'transparent',
-                  backgroundColor: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                  color: !allowed ? 'var(--text-dim)' : isActive ? '#ffffff' : 'var(--text-muted)',
+                  borderColor: isActive ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+                  backgroundColor: isActive ? 'rgba(99, 102, 241, 0.16)' : 'transparent',
+                  color: !allowed ? 'var(--text-dim)' : isActive ? '#818cf8' : 'var(--text-muted)',
                   cursor: !allowed ? 'not-allowed' : 'pointer',
                   opacity: !allowed ? 0.55 : 1,
                   transition: 'all 0.2s ease',

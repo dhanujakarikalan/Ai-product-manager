@@ -22,7 +22,7 @@ export const ReportingDashboardModule = () => {
           <span className="badge badge-primary" style={{ marginBottom: '8px' }}>Module 10: Executive Intelligence</span>
           <h1 style={{ fontSize: '1.75rem' }}>Reporting & Insights Dashboard</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Real-time synthesis of customer sentiment, AI theme velocity, and ARR impact for <strong>{data.workspaces.find(w=>w.id===data.activeWorkspaceId)?.name}</strong>.
+            Real-time synthesis of customer sentiment, AI theme velocity, and ARR impact for <strong>{data.workspaces?.find(w => w.id === data.activeWorkspaceId)?.name || 'Current Workspace'}</strong>.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>

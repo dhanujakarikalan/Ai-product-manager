@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Settings, UserCheck, ShieldCheck, Users, FileText, Lock, Cpu, Database, Sun, Moon } from 'lucide-react';
+import { Settings, UserCheck, ShieldCheck, Users, FileText, Lock, Cpu, Database, Sun, Moon, Sliders } from 'lucide-react';
 
 export const SettingsView = () => {
   const { data, hasPermission, theme, toggleTheme } = useApp();
@@ -75,58 +75,50 @@ export const SettingsView = () => {
             {/* Appearance & Theme Selector Card */}
             <div className="glass-panel" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <Sun size={20} color="var(--accent-amber)" />
+                <Sun size={20} color="var(--primary)" />
                 <h3 style={{ fontSize: '1.1rem' }}>Appearance & Theme</h3>
               </div>
               <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
                 Select your preferred visual mode across all dashboards and reports.
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => toggleTheme('dark')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    background: theme === 'dark' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid',
-                    borderColor: theme === 'dark' ? 'var(--primary)' : 'var(--border-color)',
-                    color: 'var(--text-main)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    fontWeight: theme === 'dark' ? 700 : 500
-                  }}
-                >
-                  <Moon size={18} color={theme === 'dark' ? '#818cf8' : 'var(--text-dim)'} />
-                  <span>Dark Mode</span>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => toggleTheme('light')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    background: theme === 'light' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid',
-                    borderColor: theme === 'light' ? 'var(--accent-amber)' : 'var(--border-color)',
-                    color: 'var(--text-main)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    fontWeight: theme === 'light' ? 700 : 500
-                  }}
-                >
-                  <Sun size={18} color={theme === 'light' ? '#fbbf24' : 'var(--text-dim)'} />
-                  <span>Light Mode</span>
-                </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                {[
+                  { id: 'dark', name: 'Dark Theme', desc: 'Deep Obsidian Dark', color: '#6366f1', icon: Moon },
+                  { id: 'medium', name: 'Medium Theme', desc: 'Slate Grey Dim', color: '#38bdf8', icon: Sliders },
+                  { id: 'light', name: 'Light Theme', desc: 'Crisp Slate White', color: '#2563eb', icon: Sun }
+                ].map(t => {
+                  const IconComponent = t.icon;
+                  const isActive = theme === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => toggleTheme(t.id)}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '16px 12px',
+                        borderRadius: '12px',
+                        background: isActive ? 'var(--primary-light)' : 'rgba(255, 255, 255, 0.03)',
+                        border: '2px solid',
+                        borderColor: isActive ? 'var(--primary)' : 'var(--border-color)',
+                        color: 'var(--text-main)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <IconComponent size={22} color={isActive ? 'var(--primary)' : 'var(--text-dim)'} />
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{t.name}</div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>{t.desc}</div>
+                      {isActive && <span className="badge badge-primary" style={{ marginTop: '4px', fontSize: '0.68rem' }}>Active</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -167,17 +159,7 @@ export const SettingsView = () => {
                   <button type="submit" className="btn btn-primary btn-sm">Add</button>
                 </form>
               </div>
-            ) : (
-              <div className="glass-panel" style={{ padding: '24px', borderLeft: '4px solid #34d399' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399', fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px' }}>
-                  <ShieldCheck size={18} />
-                  <span>Enterprise Role Security Active</span>
-                </div>
-                <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  As **Product Manager**, you have full access to dashboards, data uploads, AI RAG chat, and PRD/Roadmap generation. User management is reserved for System Administrators.
-                </p>
-              </div>
-            )}
+            ) : null}
 
             {hasPermission('view_logs') && (
               <div className="glass-panel" style={{ padding: '20px', borderLeft: '4px solid #f43f5e' }}>

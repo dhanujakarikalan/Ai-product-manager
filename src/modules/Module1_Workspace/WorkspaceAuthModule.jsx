@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 import { Briefcase, Users, Shield, Plus, Check, Key, UserCheck, Lock } from 'lucide-react';
 
 export const WorkspaceAuthModule = () => {
@@ -12,6 +13,18 @@ export const WorkspaceAuthModule = () => {
     if (!newWsName.trim()) return;
     alert(`Workspace "${newWsName}" created successfully! Simulation active.`);
     setNewWsName('');
+  };
+
+  // Handler for triggering the workbench webhook
+  const handleTriggerWorkbench = async () => {
+    try {
+      const payload = { event: 'trigger', workspace: data.activeWorkspaceId };
+      await api.triggerWorkbench(payload);
+      alert('Workbench webhook triggered successfully');
+    } catch (err) {
+      console.error(err);
+      alert(`Error triggering workbench: ${err.message}`);
+    }
   };
 
   return (
@@ -136,6 +149,11 @@ export const WorkspaceAuthModule = () => {
             </div>
           </div>
         </div>
+      </div>
+      <div className="glass-panel" style={{ padding: '24px', marginTop: '24px' }}>
+        <button className="btn btn-primary" onClick={handleTriggerWorkbench}>
+          <span>Trigger Agent SNS Workbench</span>
+        </button>
       </div>
     </div>
   );

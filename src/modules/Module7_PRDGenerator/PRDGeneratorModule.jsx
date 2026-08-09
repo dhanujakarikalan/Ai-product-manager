@@ -154,22 +154,6 @@ export const PRDGeneratorModule = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Gherkin Acceptance Criteria */}
-              <div className="glass-panel" style={{ padding: '24px', flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                  <Code size={18} color="#34d399" />
-                  <h3 style={{ fontSize: '1.15rem' }}>Acceptance Criteria (Gherkin Scenarios)</h3>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {selectedPrd.acceptanceCriteria.map((ac, idx) => (
-                    <div key={idx} style={{ padding: '14px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: '1px solid var(--border-color)', fontFamily: 'monospace', fontSize: '0.82rem', color: '#34d399', lineHeight: 1.5 }}>
-                      {ac}
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         ) : (

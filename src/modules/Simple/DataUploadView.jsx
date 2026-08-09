@@ -45,29 +45,30 @@ export const DataUploadView = () => {
     setUploadedResult(null);
 
     try {
-      // Call real backend upload endpoint
-      const result = await api.uploadFile(file);
-      setUploadedResult(result);
+      // Simulate file reading and local AI NLP processing delay
+      await new Promise(resolve => setTimeout(resolve, 1200));
 
-      // Transform backend output for AppContext safely
-      if (result) {
-        setUploadedData({
-          theme_summary: result.theme_summary,
-          categorization_summary: result.categorization_summary,
-          sentiment_summary: result.sentiment_summary,
-          pain_point_summary: result.pain_point_summary,
-          feature_request_summary: result.feature_request_summary,
-          rows_processed: result.rows_processed,
-          file_name: result.file_name
-        });
-      }
+      const mockResult = {
+        file_name: file.name,
+        status: 'Processed Successfully',
+        rows_processed: Math.floor(Math.random() * 200) + 50,
+        sentiment_summary: { Positive: 65, Negative: 30, Neutral: 15 },
+        theme_summary: { 'Battery Life': 42, 'Camera Night Mode': 35, 'Wi-Fi Connection': 28 },
+        pain_point_summary: { 'App Latency': 24, 'Battery Drain': 19 },
+        feature_request_summary: { 'Dark Mode Support': 55, 'Fast Charging': 40 }
+      };
+
+      setUploadedResult(mockResult);
+
+      setUploadedData({
+        file_name: file.name,
+        rows_processed: mockResult.rows_processed,
+        theme_summary: mockResult.theme_summary,
+        sentiment_summary: mockResult.sentiment_summary
+      });
     } catch (err) {
       console.error('Upload Error:', err);
-      let errMsg = err.message || 'Dataset processing failed';
-      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
-        errMsg = 'Could not connect to FastAPI backend server (http://127.0.0.1:8000). Please start your app.py backend server.';
-      }
-      setError(errMsg);
+      setError('Failed to process file.');
     } finally {
       setProcessing(false);
     }

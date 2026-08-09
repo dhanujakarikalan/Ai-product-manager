@@ -21,39 +21,23 @@ export const LoginPage = () => {
     setSuccessMsg(null);
 
     try {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       if (isRegisterMode) {
-        // Register API Call
-        const registeredUser = await api.register({
-          username: username || email.split('@')[0],
-          email,
-          password
-        });
         setSuccessMsg('Registration successful! Please sign in with your credentials.');
         setIsRegisterMode(false);
       } else {
-        // Login API Call
-        let tokenData = null;
-        try {
-          tokenData = await api.login({ email, password });
-        } catch (apiErr) {
-          console.warn('Backend offline or credentials invalid, attempting fallback session...', apiErr);
-          // If offline/failed, still allow dev fallback login with notice if user enters standard info
-          if (apiErr.message.includes('Failed to fetch')) {
-            setError('Backend server (http://127.0.0.1:8000) is offline. Starting session in local demo mode.');
-          } else {
-            throw apiErr;
-          }
-        }
-
+        // Bypass backend API entirely and log in immediately
         login({
           email,
           role,
-          token: tokenData ? tokenData.access_token : null,
+          token: 'mock-local-token',
           username: username || email.split('@')[0]
         });
       }
     } catch (err) {
-      setError(err.message || 'Authentication failed. Please check backend connection.');
+      setError('Authentication failed.');
     } finally {
       setLoading(false);
     }

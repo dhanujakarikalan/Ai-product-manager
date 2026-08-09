@@ -1,4 +1,26 @@
 export const initialMockData = {
+  workspaces: [
+    { id: 'ws-1', name: 'NovaPhone Core' },
+    { id: 'ws-2', name: 'Nova OS Beta' }
+  ],
+  activeWorkspaceId: 'ws-1',
+  analyticsMetrics: {
+    csatScore: '4.8/5.0',
+    dau: '42.8K',
+    dauGrowth: '+14.2%',
+    checkoutConversion: '3.42%',
+    checkoutDropoff: '-4.1% at 3D-Secure',
+    retention30d: '68.4%',
+    featureAdoptionRate: '74.2%'
+  },
+  analyticsConnectors: [
+    { id: 'conn-1', name: 'Zendesk Support Webhooks', status: 'Connected', health: 99, lastSync: '2 mins ago', eventsToday: '1,420 Tickets' },
+    { id: 'conn-2', name: 'Mixpanel Behavioral Events', status: 'Connected', health: 96, lastSync: 'Just now', eventsToday: '2.4M Events' },
+    { id: 'conn-3', name: 'Gong Sales Call Transcripts', status: 'Connected', health: 98, lastSync: '15 mins ago', eventsToday: '840 Transcripts' },
+    { id: 'conn-4', name: 'Google Play & App Store Reviews', status: 'Connected', health: 94, lastSync: '1 hour ago', eventsToday: '580 Reviews' },
+    { id: 'conn-5', name: 'Intercom Live Chat Stream', status: 'Connected', health: 97, lastSync: '5 mins ago', eventsToday: '390 Chats' },
+    { id: 'conn-6', name: 'Segment Customer Data Platform', status: 'Connected', health: 100, lastSync: 'Just now', eventsToday: '3.8M Events' }
+  ],
   userProfile: {
     name: 'Alex Rivera',
     role: 'Lead Product Manager',

@@ -4,11 +4,13 @@ import { Sidebar } from './components/common/Sidebar';
 import { Header } from './components/common/Header';
 import { LoginPage } from './components/auth/LoginPage';
 
-// Import our 5 neat, simple views directly matching the System Architecture diagram:
+// Import clean simplified views & essential modules:
 import { DashboardView } from './modules/Simple/DashboardView';
 import { DataUploadView } from './modules/Simple/DataUploadView';
+import { ThemeExtractionModule } from './modules/Module4_ThemeExtraction/ThemeExtractionModule';
+import { UserStoriesView } from './modules/Simple/UserStoriesView';
+import { PRDGeneratorModule } from './modules/Module7_PRDGenerator/PRDGeneratorModule';
 import { ChatInterfaceView } from './modules/Simple/ChatInterfaceView';
-import { ReportsView } from './modules/Simple/ReportsView';
 import { SettingsView } from './modules/Simple/SettingsView';
 
 const ModuleRouter = () => {
@@ -17,10 +19,17 @@ const ModuleRouter = () => {
   switch (activeModule) {
     case 'upload':
       return <DataUploadView />;
+    case 'theme':
+    case 'themes':
+      return <ThemeExtractionModule />;
+    case 'stories':
+    case 'user-stories':
+      return <UserStoriesView />;
+    case 'prd':
+    case 'reports':
+      return <PRDGeneratorModule />;
     case 'chat':
       return <ChatInterfaceView />;
-    case 'reports':
-      return <ReportsView />;
     case 'settings':
       return <SettingsView />;
     case 'dashboard':

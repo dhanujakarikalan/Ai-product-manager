@@ -10,7 +10,7 @@ export const Header = () => {
     <header style={{
       height: '68px',
       borderBottom: '1px solid var(--border-color)',
-      backgroundColor: 'rgba(15, 21, 35, 0.85)',
+      backgroundColor: 'rgba(13, 14, 18, 0.85)',
       backdropFilter: 'blur(16px)',
       display: 'flex',
       alignItems: 'center',

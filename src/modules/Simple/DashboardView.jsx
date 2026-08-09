@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { LayoutDashboard, AlertTriangle, Cpu, ArrowRight, Sparkles, TrendingUp, Users, CheckCircle2, FileText, Server, AlertCircle } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts';
 
 export const DashboardView = () => {
   const { data, chartData, setActiveModule, apiConnected } = useApp();
@@ -90,36 +90,47 @@ export const DashboardView = () => {
         <div className="grid-2" style={{ gap: '24px' }}>
           {/* Category Bar Chart */}
           <div className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '20px' }}>Theme Distribution</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Theme Distribution</h3>
+              <span className="badge badge-primary" style={{ fontSize: '0.72rem' }}>By Ticket Volume</span>
+            </div>
             <div style={{ height: '260px', width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={themeChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                <BarChart data={themeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                   <Tooltip 
-                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                    contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-main)' }} 
+                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                    contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }} 
                   />
-                  <Bar dataKey="tickets" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="tickets" radius={[8, 8, 0, 0]}>
+                    {themeChartData.map((entry, index) => {
+                      const colors = ['#6366f1', '#38bdf8', '#10b981', '#a855f7', '#f59e0b', '#f43f5e'];
+                      return <Cell key={`bar-${index}`} fill={colors[index % colors.length]} />;
+                    })}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Sentiment Pie Chart */}
+          {/* Sentiment Donut Chart with Center KPI */}
           <div className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '20px' }}>Feedback Sentiment</h3>
-            <div style={{ height: '260px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Feedback Sentiment</h3>
+              <span className="badge badge-success" style={{ fontSize: '0.72rem' }}>72% Positive/Neutral</span>
+            </div>
+            <div style={{ height: '260px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              <ResponsiveContainer width="60%" height="100%">
                 <PieChart>
                   <Pie
                     data={sentimentPieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={65}
+                    innerRadius={68}
                     outerRadius={95}
-                    paddingAngle={5}
+                    paddingAngle={6}
                     dataKey="value"
                     stroke="none"
                   >
@@ -128,17 +139,26 @@ export const DashboardView = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-main)' }} 
+                    contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '10px', color: 'var(--text-main)' }} 
                   />
                 </PieChart>
               </ResponsiveContainer>
+
+              {/* Center Donut Label */}
+              <div style={{ position: 'absolute', left: '30%', top: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)' }}>{totalCount}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Total</div>
+              </div>
               
               {/* Custom Legend */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginLeft: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginLeft: '10px', flex: 1 }}>
                 {sentimentPieData.map((s, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: s.color || '#6366f1' }}></div>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>{s.name} ({s.value})</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', gap: '10px' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: s.color || '#6366f1', flexShrink: 0 }}></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '0.85rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{s.name}</span>
+                      <strong style={{ color: 'var(--text-main)', marginLeft: '12px' }}>{s.value}</strong>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -146,20 +166,34 @@ export const DashboardView = () => {
           </div>
         </div>
 
-        {/* ROW 3: Trend Line Chart */}
+        {/* ROW 3: Area Trend Chart with Gradient Fill */}
         <div className="glass-panel" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '20px' }}>Incoming Feedback Trend</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Incoming Feedback Trend</h3>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '2px' }}>Weekly volume trajectory across channels</p>
+            </div>
+            <span style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <TrendingUp size={15} /> +18.4% vs last week
+            </span>
+          </div>
           <div style={{ height: '240px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData.trends} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+              <AreaChart data={chartData.trends} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.35}/>
+                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-main)' }} 
+                  contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }} 
                 />
-                <Line type="monotone" dataKey="tickets" stroke="var(--accent-cyan)" strokeWidth={3} dot={{ r: 4, fill: 'var(--bg-main)', stroke: 'var(--accent-cyan)', strokeWidth: 2 }} activeDot={{ r: 6, fill: 'var(--accent-cyan)' }} />
-              </LineChart>
+                <Area type="monotone" dataKey="tickets" stroke="#38bdf8" strokeWidth={3} fillOpacity={1} fill="url(#colorTrend)" dot={{ r: 4, fill: 'var(--bg-main)', stroke: '#38bdf8', strokeWidth: 2 }} activeDot={{ r: 7, fill: '#38bdf8' }} />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>

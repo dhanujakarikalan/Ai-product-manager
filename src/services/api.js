@@ -87,6 +87,33 @@ export const api = {
     return data;
   },
 
+  // Agent SNS Workbench integration
+  /**
+   * Trigger a webhook on the Agent SNS Workbench.
+   * @param {Object} payload - JSON payload to send.
+   * @returns {Promise<Object>} - Response from the webhook.
+   */
+  async triggerWorkbench(payload) {
+    const url = import.meta.env.VITE_WORKBENCH_URL;
+    const apiKey = import.meta.env.VITE_WORKBENCH_API_KEY;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Failed to trigger workbench webhook');
+    }
+    return data;
+  },
+
   // Feedback endpoints
   async getFeedback() {
     const res = await fetch(`${API_BASE}/feedback`);
