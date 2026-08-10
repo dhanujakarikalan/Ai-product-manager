@@ -19,10 +19,12 @@ export const UserStoriesView = () => {
       status: 'Done',
       priority: 'High',
       feature: 'Automated Report Export Engine',
+      workStream: 'Development',
+      estimate: '5 pts',
       acceptanceCriteria: [
-        'Given user clicks Export on >50k rows',
-        'When background worker queues job',
-        'Then progress bar displays instantly without blocking UI'
+        { id: 'ac-1', text: 'Given user clicks Export on >50k rows', done: true },
+        { id: 'ac-2', text: 'When background worker queues job', done: true },
+        { id: 'ac-3', text: 'Then progress bar displays instantly without blocking UI', done: true }
       ]
     },
     {
@@ -33,10 +35,12 @@ export const UserStoriesView = () => {
       status: 'In Review',
       priority: 'Medium',
       feature: 'Mobile Responsive Dashboard',
+      workStream: 'Design',
+      estimate: '3 pts',
       acceptanceCriteria: [
-        'Given executive logs in via mobile browser',
-        'When viewing executive summary page',
-        'Then charts resize to fit screen width'
+        { id: 'ac-4', text: 'Given executive logs in via mobile browser', done: true },
+        { id: 'ac-5', text: 'When viewing executive summary page', done: false },
+        { id: 'ac-6', text: 'Then charts resize dynamically to fit screen width', done: false }
       ]
     },
     {
@@ -47,10 +51,12 @@ export const UserStoriesView = () => {
       status: 'To Do',
       priority: 'High',
       feature: 'Async Worker Queue',
+      workStream: 'Data',
+      estimate: '8 pts',
       acceptanceCriteria: [
-        'Given analyst requests 100k row CSV export',
-        'When file generation finishes',
-        'Then toast notification triggers with direct download link'
+        { id: 'ac-7', text: 'Given analyst requests 100k row CSV export', done: false },
+        { id: 'ac-8', text: 'When file generation finishes', done: false },
+        { id: 'ac-9', text: 'Then toast notification triggers with direct download link', done: false }
       ]
     },
     {
@@ -61,10 +67,12 @@ export const UserStoriesView = () => {
       status: 'In Progress',
       priority: 'Medium',
       feature: 'OLED Dark Theme',
+      workStream: 'QA/Validation',
+      estimate: '2 pts',
       acceptanceCriteria: [
-        'Given user toggles dark mode switch',
-        'When dark theme activates',
-        'Then background hex color switches to pure black (#000000)'
+        { id: 'ac-10', text: 'Given user toggles dark mode switch', done: true },
+        { id: 'ac-11', text: 'When dark theme activates', done: true },
+        { id: 'ac-12', text: 'Then background hex color switches to pure black (#000000)', done: false }
       ]
     },
     {
@@ -75,10 +83,12 @@ export const UserStoriesView = () => {
       status: 'In Progress',
       priority: 'Critical',
       feature: 'Enterprise SAML SSO',
+      workStream: 'Support',
+      estimate: '5 pts',
       acceptanceCriteria: [
-        'Given enterprise admin enters IDP metadata URL',
-        'When user attempts SSO login',
-        'Then token is validated against enterprise directory'
+        { id: 'ac-13', text: 'Given enterprise admin enters IDP metadata URL', done: true },
+        { id: 'ac-14', text: 'When user attempts SSO login', done: true },
+        { id: 'ac-15', text: 'Then token is validated against enterprise directory', done: false }
       ]
     }
   ]);

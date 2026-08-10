@@ -22,11 +22,12 @@ export const Sidebar = () => {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, requiredPermission: null },
-    { id: 'upload', label: 'Data Upload', icon: Inbox, requiredPermission: null },
-    { id: 'themes', label: 'Theme Extraction', icon: Layers, requiredPermission: null },
-    { id: 'stories', label: 'User Stories', icon: BookOpen, requiredPermission: null },
+    { id: 'upload', label: 'Feedback Workspace', icon: Inbox, requiredPermission: null },
+    { id: 'themes', label: 'Product Insights', icon: BarChart3, requiredPermission: null },
     { id: 'prd', label: 'PRD Generator', icon: FileText, requiredPermission: null },
-    { id: 'chat', label: 'AI Assistant', icon: Bot, requiredPermission: null },
+    { id: 'stories', label: 'User Stories', icon: BookOpen, requiredPermission: null },
+    { id: 'prioritization', label: 'Feature Prioritization', icon: Sliders, requiredPermission: null },
+    { id: 'chat', label: 'Product Assistant', icon: Bot, requiredPermission: null },
     { id: 'settings', label: 'Settings', icon: Settings, requiredPermission: 'manage_settings' }
   ];
 

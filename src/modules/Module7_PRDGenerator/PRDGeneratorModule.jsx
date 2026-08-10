@@ -94,7 +94,7 @@ export const PRDGeneratorModule = () => {
 
               <div>
                 <h4 style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-                  1. Executive Overview
+                  1. Product / Feature Title & Version
                 </h4>
                 <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-main)' }}>
                   {selectedPrd.overview}
@@ -103,16 +103,30 @@ export const PRDGeneratorModule = () => {
 
               <div>
                 <h4 style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fb7185', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-                  2. Problem Statement & ARR Justification
+                  2. Problem Statement & Customer Pain Points
                 </h4>
                 <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-main)', background: 'rgba(244, 63, 94, 0.08)', padding: '14px', borderRadius: '10px', borderLeft: '3px solid #fb7185' }}>
                   {selectedPrd.problemStatement}
                 </p>
               </div>
 
+              {/* Customer Feedback Evidence */}
+              <div>
+                <h4 style={{ fontSize: '0.84rem', fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+                  3. Relevant Customer Feedback Evidence
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {data.feedbackItems.slice(0, 3).map((f, i) => (
+                    <div key={i} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      <strong style={{ color: 'var(--text-main)' }}>{f.source}:</strong> "{f.content}"
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <h4 style={{ fontSize: '0.84rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-                  3. Target Audience & Personas
+                  4. Objective & Target Users / Personas
                 </h4>
                 <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-muted)' }}>
                   {selectedPrd.targetAudience}
@@ -121,13 +135,41 @@ export const PRDGeneratorModule = () => {
 
               <div>
                 <h4 style={{ fontSize: '0.84rem', fontWeight: 700, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-                  4. Strategic Goals & Key Results
+                  5. User Needs & Proposed Solution
                 </h4>
                 <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem', color: 'var(--text-main)' }}>
                   {selectedPrd.goals.map((g, idx) => (
                     <li key={idx}>{g}</li>
                   ))}
                 </ul>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', marginBottom: '6px' }}>6. Functional Requirements</h4>
+                  <ul style={{ paddingLeft: '16px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    <li>REST API backend connection</li>
+                    <li>Asynchronous processing queue</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', marginBottom: '6px' }}>7. Non-Functional Requirements</h4>
+                  <ul style={{ paddingLeft: '16px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    <li>Response time &lt; 200ms</li>
+                    <li>99.9% uptime SLA</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#34d399', textTransform: 'uppercase', marginBottom: '6px' }}>8. Business Impact & Success Metrics</h4>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>+24% customer retention, ARR opportunity $140K.</p>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fb7185', textTransform: 'uppercase', marginBottom: '6px' }}>9. Risks & Assumptions</h4>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Assumes FastAPI backend deployment within Q3 sprint.</p>
+                </div>
               </div>
             </div>
 

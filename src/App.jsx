@@ -10,6 +10,7 @@ import { DataUploadView } from './modules/Simple/DataUploadView';
 import { ThemeExtractionModule } from './modules/Module4_ThemeExtraction/ThemeExtractionModule';
 import { UserStoriesView } from './modules/Simple/UserStoriesView';
 import { PRDGeneratorModule } from './modules/Module7_PRDGenerator/PRDGeneratorModule';
+import { FeaturePrioritizationView } from './modules/Simple/FeaturePrioritizationView';
 import { ChatInterfaceView } from './modules/Simple/ChatInterfaceView';
 import { SettingsView } from './modules/Simple/SettingsView';
 
@@ -18,9 +19,11 @@ const ModuleRouter = () => {
 
   switch (activeModule) {
     case 'upload':
+    case 'feedback':
       return <DataUploadView />;
     case 'theme':
     case 'themes':
+    case 'insights':
       return <ThemeExtractionModule />;
     case 'stories':
     case 'user-stories':
@@ -28,7 +31,10 @@ const ModuleRouter = () => {
     case 'prd':
     case 'reports':
       return <PRDGeneratorModule />;
+    case 'prioritization':
+      return <FeaturePrioritizationView />;
     case 'chat':
+    case 'assistant':
       return <ChatInterfaceView />;
     case 'settings':
       return <SettingsView />;

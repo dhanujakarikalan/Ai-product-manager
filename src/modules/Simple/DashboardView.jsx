@@ -47,42 +47,61 @@ export const DashboardView = () => {
 
       <div className="module-body" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* ROW 1: KPI Cards */}
-        <div className="grid-4" style={{ gap: '20px' }}>
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid var(--primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Total Feedback</span>
-              <FileText size={18} color="var(--primary)" />
-            </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-main)' }}>{totalCount}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Records ingested & analyzed</span>
+        {/* ROW 1: Quick Actions Bar */}
+        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Quick Actions:</span>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button onClick={() => setActiveModule('prd')} className="btn btn-primary btn-sm">Generate PRD</button>
+            <button onClick={() => setActiveModule('stories')} className="btn btn-secondary btn-sm">Generate User Stories</button>
+            <button onClick={() => setActiveModule('prioritization')} className="btn btn-secondary btn-sm">Prioritize Features</button>
+            <button onClick={() => setActiveModule('chat')} className="btn btn-secondary btn-sm">Ask AI Assistant</button>
+          </div>
+        </div>
+
+        {/* ROW 2: Top 6 KPI Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+          <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid var(--primary)' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Total Feedback</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>{totalCount}</div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Records ingested</span>
           </div>
 
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid var(--accent-rose)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Negative Feedback</span>
-              <AlertTriangle size={18} color="var(--accent-rose)" />
+          <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #10b981' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Positive %</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#34d399', marginTop: '4px' }}>
+              {Math.round((posCount / totalCount) * 100)}%
             </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-main)' }}>{negCount}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Frustrations & friction points</span>
+            <span style={{ fontSize: '0.72rem', color: '#34d399' }}>Satisfied users</span>
           </div>
 
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid var(--accent-amber)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Prioritized Features</span>
-              <Sparkles size={18} color="var(--accent-amber)" />
+          <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #f43f5e' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Negative %</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fb7185', marginTop: '4px' }}>
+              {Math.round((negCount / totalCount) * 100)}%
             </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-main)' }}>{data.features.length}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Roadmap items</span>
+            <span style={{ fontSize: '0.72rem', color: '#fb7185' }}>Pain & friction</span>
           </div>
 
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid var(--accent-emerald)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Positive Feedback</span>
-              <CheckCircle2 size={18} color="var(--accent-emerald)" />
+          <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #38bdf8' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Top Theme</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Performance
             </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-main)' }}>{posCount}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--accent-emerald)' }}>Delight & appreciation</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>140 tickets</span>
+          </div>
+
+          <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #f59e0b' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Top Pain Point</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Battery Drain
+            </div>
+            <span style={{ fontSize: '0.72rem', color: '#fbbf24' }}>Critical severity</span>
+          </div>
+
+          <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #c084fc' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Feature Requests</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#c084fc', marginTop: '4px' }}>{data.features.length}</div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Prioritized items</span>
           </div>
         </div>
 

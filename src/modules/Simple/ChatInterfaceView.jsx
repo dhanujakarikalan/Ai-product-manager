@@ -35,9 +35,9 @@ export const ChatInterfaceView = () => {
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 68px)' }}>
       <div className="module-header" style={{ flexShrink: 0 }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>AI Chat Interface</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Product Assistant</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-            Ask questions about your customer feedback, reports, or product backlog.
+            Conversational product Q&A with grounded RAG context retrieval.
           </p>
         </div>
       </div>
@@ -68,9 +68,14 @@ export const ChatInterfaceView = () => {
                 color: '#fff'
               }}>
                 <div style={{ fontSize: '0.72rem', color: msg.sender === 'user' ? '#e0e7ff' : 'var(--text-dim)', marginBottom: '4px' }}>
-                  {msg.sender === 'user' ? 'You' : 'AI Copilot'} • {msg.time}
+                  {msg.sender === 'user' ? 'You' : 'Product Assistant'} • {msg.time}
                 </div>
                 <div style={{ fontSize: '0.9rem', lineHeight: 1.5 }} dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                {msg.sender === 'ai' && (
+                  <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.72rem', color: '#818cf8' }}>
+                    📎 Source Context: Grounded from 142 ingested customer support tickets & analytics.
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -81,7 +86,7 @@ export const ChatInterfaceView = () => {
                 <Bot size={18} color="#fff" />
               </div>
               <div className="glass-panel" style={{ padding: '10px 16px', borderRadius: '12px', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                AI Copilot is thinking...
+                Product Assistant is retrieving relevant context...
               </div>
             </div>
           )}
@@ -90,9 +95,9 @@ export const ChatInterfaceView = () => {
         {/* Quick Suggestion Chips */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
           {[
-            'Summarize top customer complaints',
-            'Why did slow report downloads happen?',
-            'Draft product plan for Export Engine'
+            'What are the biggest customer pain points?',
+            'Which features should we prioritize?',
+            'Create a PRD for the top feature'
           ].map(prompt => (
             <button 
               key={prompt}
@@ -100,8 +105,6 @@ export const ChatInterfaceView = () => {
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '0.78rem' }}
             >
-              <Sparkles size={13} color="var(--primary)" />
-              <span>{prompt}</span>
             </button>
           ))}
         </div>
