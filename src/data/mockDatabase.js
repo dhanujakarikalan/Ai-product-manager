@@ -316,7 +316,7 @@ export const initialMockData = {
       id: 'prd-1',
       featureId: 'feat-1',
       title: 'PRD: Automated Report Export Engine',
-      version: 'v1.2 (Approved)',
+      version: 'v1.2',
       author: 'Alex Rivera',
       lastUpdated: 'Today at 11:30 AM',
       overview: 'This document defines the engineering requirements for implementing an automated background report export engine to prevent browser freezes when downloading large datasets.',

@@ -43,7 +43,7 @@ export const PRDGeneratorModule = () => {
             >
               {data.prds.map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.title} ({p.version})
+                  {p.title} • {p.version}
                 </option>
               ))}
             </select>
