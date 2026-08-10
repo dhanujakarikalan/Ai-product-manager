@@ -20,40 +20,29 @@ export const PRDGeneratorModule = () => {
 
   return (
     <div className="animate-fade-in">
-      <div className="module-header">
+      <div className="module-header" style={{ marginBottom: '20px' }}>
         <div>
-          <span className="badge badge-primary" style={{ marginBottom: '8px' }}>Module 7: AI Specification Studio</span>
-          <h1 style={{ fontSize: '1.75rem' }}>PRD & User Story Generation Module</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Transform prioritized feature concepts into structured requirements, Gherkin acceptance criteria, and user stories.
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>PRD Generator</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
+            Generate and edit Product Requirement Documents based on customer feedback.
           </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleSimulateAIDrafting} disabled={generating} className="btn btn-primary" style={{ boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)' }}>
-            <Sparkles size={16} />
-            <span>{generating ? 'AI Writing Specification...' : 'AI Enhance & Polish PRD'}</span>
-          </button>
-          <button onClick={() => alert('Exported PRD & Stories to Jira / Linear format (JSON + Markdown payload saved)!')} className="btn btn-secondary">
-            <Download size={16} />
-            <span>Export to Jira / Linear</span>
-          </button>
         </div>
       </div>
 
       <div className="module-body">
         {/* Document Selector & Editor Toggle */}
-        <div className="glass-panel" style={{ padding: '16px 20px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div className="glass-panel" style={{ padding: '14px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <FileText size={18} color="var(--primary)" />
-            <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--text-dim)' }}>Select Active PRD:</span>
+            <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--text-dim)' }}>PRD Document:</span>
             <select 
               value={selectedPrdId}
               onChange={e => setSelectedPrdId(e.target.value)}
               className="input-field"
-              style={{ width: '380px', fontWeight: 600, fontSize: '0.9rem' }}
+              style={{ width: '320px', fontWeight: 600, fontSize: '0.86rem', padding: '6px 12px' }}
             >
               {data.prds.map(p => (
-                <option key={p.id} value={p.id} style={{ background: '#0f1523' }}>
+                <option key={p.id} value={p.id}>
                   {p.title} ({p.version})
                 </option>
               ))}
@@ -64,18 +53,18 @@ export const PRDGeneratorModule = () => {
             <button 
               onClick={() => setActiveView('preview')} 
               className="btn btn-sm"
-              style={{ background: activeView === 'preview' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: '#fff' }}
+              style={{ background: activeView === 'preview' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: activeView === 'preview' ? '#fff' : 'var(--text-muted)' }}
             >
               <Eye size={14} />
-              <span>Formatted Preview</span>
+              <span>Preview</span>
             </button>
             <button 
               onClick={() => setActiveView('editor')} 
               className="btn btn-sm"
-              style={{ background: activeView === 'editor' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: '#fff' }}
+              style={{ background: activeView === 'editor' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: activeView === 'editor' ? '#fff' : 'var(--text-muted)' }}
             >
               <Edit3 size={14} />
-              <span>Markdown Editor</span>
+              <span>Edit Markdown</span>
             </button>
           </div>
         </div>
