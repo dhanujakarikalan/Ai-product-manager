@@ -84,9 +84,9 @@ export const SettingsView = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 {[
+                  { id: 'light', name: 'Light Theme (Default)', desc: 'Crisp Slate White', color: '#2563eb', icon: Sun },
                   { id: 'dark', name: 'Dark Theme', desc: 'Deep Obsidian Dark', color: '#6366f1', icon: Moon },
-                  { id: 'medium', name: 'Medium Theme', desc: 'Slate Grey Dim', color: '#38bdf8', icon: Sliders },
-                  { id: 'light', name: 'Light Theme', desc: 'Crisp Slate White', color: '#2563eb', icon: Sun }
+                  { id: 'medium', name: 'Medium Theme', desc: 'Slate Grey Dim', color: '#38bdf8', icon: Sliders }
                 ].map(t => {
                   const IconComponent = t.icon;
                   const isActive = theme === t.id;

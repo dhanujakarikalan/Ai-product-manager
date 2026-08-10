@@ -9,14 +9,18 @@ export const AppProvider = ({ children }) => {
   const [chartData, setChartData] = useState(initialChartData);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [apiConnected, setApiConnected] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 'n-1', text: 'FastAPI Backend integration pipeline connected', type: 'info', time: 'Just now' }
   ]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   const toggleTheme = (newTheme) => {
-    const target = newTheme || (theme === 'dark' ? 'light' : 'dark');
+    const target = newTheme || (theme === 'light' ? 'dark' : 'light');
     setTheme(target);
     document.documentElement.setAttribute('data-theme', target);
   };
