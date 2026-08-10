@@ -3,6 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Sidebar } from './components/common/Sidebar';
 import { Header } from './components/common/Header';
 import { LoginPage } from './components/auth/LoginPage';
+import { LandingPage } from './components/auth/LandingPage';
 
 // Import clean simplified views & essential modules:
 import { DashboardView } from './modules/Simple/DashboardView';
@@ -46,9 +47,18 @@ const ModuleRouter = () => {
 
 function AppContent() {
   const { isLoggedIn } = useApp();
+  const [showLogin, setShowLogin] = React.useState(false);
 
   if (!isLoggedIn) {
-    return <LoginPage />;
+    if (showLogin) {
+      return <LoginPage onBackToLanding={() => setShowLogin(false)} />;
+    }
+    return (
+      <LandingPage 
+        onGetStarted={() => setShowLogin(true)} 
+        onLogin={() => setShowLogin(true)} 
+      />
+    );
   }
 
   return (

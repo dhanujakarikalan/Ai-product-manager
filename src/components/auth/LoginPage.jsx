@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Sparkles, Lock, Mail, ArrowRight, User, UserPlus, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 
-export const LoginPage = () => {
+export const LoginPage = ({ onBackToLanding }) => {
   const { login } = useApp();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [username, setUsername] = useState('');
@@ -28,7 +28,7 @@ export const LoginPage = () => {
         setSuccessMsg('Registration successful! Please sign in with your credentials.');
         setIsRegisterMode(false);
       } else {
-        // Bypass backend API entirely and log in immediately
+        // Log in immediately
         login({
           email,
           role,
@@ -59,8 +59,26 @@ export const LoginPage = () => {
         maxWidth: '440px',
         padding: '38px',
         boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6)',
-        border: '1px solid rgba(255, 255, 255, 0.12)'
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        position: 'relative'
       }}>
+        {onBackToLanding && (
+          <button
+            onClick={onBackToLanding}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              left: '16px',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-dim)',
+              fontSize: '0.8rem',
+              cursor: 'pointer'
+            }}
+          >
+            ← Back to Home
+          </button>
+        )}
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
