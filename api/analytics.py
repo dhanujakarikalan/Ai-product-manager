@@ -1,17 +1,26 @@
 from fastapi import APIRouter, HTTPException
-from api.upload import processed_df
+import services.app_state as app_state
 
-router = APIRouter(prefix="/analytics", tags=["Analytics"])
+router = APIRouter(
+    prefix="/analytics",
+    tags=["Analytics"]
+)
 
 
 def get_dataframe():
-    if processed_df is None:
+
+    if app_state.processed_df is None:
         raise HTTPException(
             status_code=400,
             detail="Please upload a dataset first."
         )
-    return processed_df
 
+    return app_state.processed_df
+
+
+# ==================================================
+# CATEGORIES
+# ==================================================
 
 @router.get("/categories")
 def categories():
@@ -19,10 +28,20 @@ def categories():
     df = get_dataframe()
 
     if "category" not in df.columns:
-        return {"message": "Category column not found"}
+        return {
+            "message": "Category column not found"
+        }
 
-    return df["category"].value_counts().to_dict()
+    return {
+        "categories": df["category"]
+        .value_counts()
+        .to_dict()
+    }
 
+
+# ==================================================
+# THEMES
+# ==================================================
 
 @router.get("/themes")
 def themes():
@@ -30,10 +49,20 @@ def themes():
     df = get_dataframe()
 
     if "theme" not in df.columns:
-        return {"message": "Theme column not found"}
+        return {
+            "message": "Theme column not found"
+        }
 
-    return df["theme"].value_counts().to_dict()
+    return {
+        "themes": df["theme"]
+        .value_counts()
+        .to_dict()
+    }
 
+
+# ==================================================
+# SENTIMENTS
+# ==================================================
 
 @router.get("/sentiments")
 def sentiments():
@@ -41,10 +70,20 @@ def sentiments():
     df = get_dataframe()
 
     if "sentiment" not in df.columns:
-        return {"message": "Sentiment column not found"}
+        return {
+            "message": "Sentiment column not found"
+        }
 
-    return df["sentiment"].value_counts().to_dict()
+    return {
+        "sentiments": df["sentiment"]
+        .value_counts()
+        .to_dict()
+    }
 
+
+# ==================================================
+# PAIN POINTS
+# ==================================================
 
 @router.get("/pain-points")
 def pain_points():
@@ -52,10 +91,20 @@ def pain_points():
     df = get_dataframe()
 
     if "pain_point" not in df.columns:
-        return {"message": "Pain Point column not found"}
+        return {
+            "message": "Pain Point column not found"
+        }
 
-    return df["pain_point"].value_counts().to_dict()
+    return {
+        "pain_points": df["pain_point"]
+        .value_counts()
+        .to_dict()
+    }
 
+
+# ==================================================
+# FEATURE REQUESTS
+# ==================================================
 
 @router.get("/feature-requests")
 def feature_requests():
@@ -63,10 +112,20 @@ def feature_requests():
     df = get_dataframe()
 
     if "feature_request" not in df.columns:
-        return {"message": "Feature Request column not found"}
+        return {
+            "message": "Feature Request column not found"
+        }
 
-    return df["feature_request"].value_counts().to_dict()
+    return {
+        "feature_requests": df["feature_request"]
+        .value_counts()
+        .to_dict()
+    }
 
+
+# ==================================================
+# TRENDS
+# ==================================================
 
 @router.get("/trends")
 def trends():
@@ -74,7 +133,9 @@ def trends():
     df = get_dataframe()
 
     if "date" not in df.columns:
-        return {"message": "Date column not found"}
+        return {
+            "message": "Date column not found"
+        }
 
     trend = (
         df.groupby("date")
@@ -82,4 +143,8 @@ def trends():
         .reset_index(name="count")
     )
 
-    return trend.to_dict(orient="records")
+    return {
+        "trends": trend.to_dict(
+            orient="records"
+        )
+    }
