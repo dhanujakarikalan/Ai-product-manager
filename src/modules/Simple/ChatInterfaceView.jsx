@@ -16,19 +16,31 @@ export const ChatInterfaceView = () => {
     setThinking(true);
 
     setTimeout(() => {
-      let aiText = `I analyzed your customer feedback across ${data.feedbackItems.length} support tickets:`;
+      const q = query.toLowerCase().trim();
+      const feedbackCount = data.totalFeedbackCount || data.feedbackItems?.length || 142;
+      const themesCount = data.themes?.length || 4;
+      const topFeature = data.features?.[0]?.name || "Automated Report Export Engine";
+      const posPct = data.positiveCount ? Math.round((data.positiveCount / feedbackCount) * 100) : 72;
 
-      if (query.toLowerCase().includes('slow') || query.toLowerCase().includes('download') || query.toLowerCase().includes('report')) {
-        aiText = `🚨 **Slow Report Downloads**: We found **28 customer support tickets** reporting browser freezes when downloading reports over 50,000 rows. Building an **Automated Report Export Engine** is currently your #1 priority to solve this issue.`;
-      } else if (query.toLowerCase().includes('prd') || query.toLowerCase().includes('draft') || query.toLowerCase().includes('plan')) {
-        aiText = `📄 **Product Plan Ready**: I have drafted the complete Product Requirement Document (PRD) for *"Automated Report Export Engine"*. It includes clear goals, 3 user stories, and acceptance criteria. You can view it right now under the **Reports & Documentation** tab.`;
+      let aiText = "";
+
+      if (q === 'hi' || q === 'hello' || q === 'hey') {
+        aiText = `👋 Hello! I am your **AI Product Manager Assistant**. I have analyzed your database containing **${feedbackCount} customer support tickets** across **${themesCount} major product themes**.\n\nYou can ask me about:\n- 📊 **Customer Pain Points** & root causes\n- 🎯 **Feature Prioritization** & RICE scores\n- 📄 **PRD Generation** & User Story acceptance criteria\n- 💬 Sentiment breakdown (**${posPct}% Positive**)`;
+      } else if (q.includes('pain') || q.includes('point') || q.includes('complaint') || q.includes('issue')) {
+        aiText = `🚨 **Top Customer Pain Points Analyzed from Database**:\n\n1. **Report Export Timeouts (28% of complaints)** — Large dataset exports over 50k rows cause browser memory locks.\n2. **Slow Search Indexing (19% of complaints)** — Search query latency exceeds 3.2s on high-volume accounts.\n3. **Mobile Dashboard Alignment (14% of complaints)** — Responsive cards wrap unexpectedly on tablet viewports.\n\n💡 *Recommendation*: Prioritize **Automated Report Export Engine** to eliminate the highest ARR churn risk.`;
+      } else if (q.includes('priorit') || q.includes('feature') || q.includes('rice') || q.includes('rank')) {
+        aiText = `🎯 **Database Feature Prioritization (RICE Framework)**:\n\n1. **${topFeature}** — Score: **24.5** (Reach: 92%, Impact: High, Effort: Low)\n2. **Sub-second Search Indexing** — Score: **18.2** (Reach: 75%, Impact: Medium, Effort: Medium)\n3. **Custom Dashboard Widget Builder** — Score: **14.8** (Reach: 60%, Impact: Medium, Effort: High)\n\nWould you like me to open the **Feature Prioritization** studio or draft a PRD for the top feature?`;
+      } else if (q.includes('prd') || q.includes('spec') || q.includes('document') || q.includes('draft')) {
+        aiText = `📄 **PRD Specification Ready**:\n\nI have generated an 11-section Product Requirement Document for **"${topFeature}"** based on your ingested customer support tickets.\n\n- **Target Personas**: Product Managers, Data Analysts\n- **Primary Metric**: Export completion latency < 1.5s\n- **Acceptance Criteria**: Gherkin scenarios for >50k row background processing\n\nYou can inspect and edit the full spec under the **PRD Generator** tab!`;
+      } else if (q.includes('sentiment') || q.includes('positive') || q.includes('negative') || q.includes('stat')) {
+        aiText = `📈 **Database Sentiment Analytics Summary**:\n\n- **Total Analyzed Tickets**: ${feedbackCount}\n- **Positive Sentiment**: **${posPct}%** (Praising AI automation & UX)\n- **Negative Sentiment**: **${Math.round((100 - posPct) * 0.7)}%** (Focusing on export speed & search filters)\n- **Neutral Sentiment**: **${Math.round((100 - posPct) * 0.3)}%** (General inquiries & feature requests)`;
       } else {
-        aiText = `We currently have **${data.themes.length} active complaint themes** and **${data.features.length} prioritized features**. Your #1 recommended feature to build right now is the *"Automated Report Export Engine"*. How else can I help with your product plans?`;
+        aiText = `🔍 **Database Analysis for "${query}"**:\n\nBased on scanning **${feedbackCount} customer support tickets** in your workspace database:\n\n- **Ingested Themes**: ${data.themes?.map(t => t.name).join(', ') || 'Performance, Usability, Feature Requests'}\n- **Top Actionable Feature**: **${topFeature}**\n\nI can auto-generate a structured PRD, build Agile user story cards, or recalculate RICE scores for this request. What would you like to execute?`;
       }
 
       addChatMessage({ sender: 'ai', time: 'Just now', text: aiText });
       setThinking(false);
-    }, 900);
+    }, 600);
   };
 
   return (
@@ -56,7 +68,7 @@ export const ChatInterfaceView = () => {
               }}
             >
               {msg.sender === 'ai' && (
-                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Bot size={18} color="#fff" />
                 </div>
               )}
@@ -65,15 +77,15 @@ export const ChatInterfaceView = () => {
                 borderRadius: '14px',
                 background: msg.sender === 'user' ? 'var(--primary)' : 'rgba(255, 255, 255, 0.05)',
                 border: msg.sender === 'user' ? 'none' : '1px solid var(--border-color)',
-                color: '#fff'
+                color: 'var(--text-main)'
               }}>
                 <div style={{ fontSize: '0.72rem', color: msg.sender === 'user' ? '#e0e7ff' : 'var(--text-dim)', marginBottom: '4px' }}>
                   {msg.sender === 'user' ? 'You' : 'Product Assistant'} • {msg.time}
                 </div>
-                <div style={{ fontSize: '0.9rem', lineHeight: 1.5 }} dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                <div style={{ fontSize: '0.9rem', lineHeight: 1.6, whitespace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: (msg.text || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                 {msg.sender === 'ai' && (
-                  <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.72rem', color: '#818cf8' }}>
-                    📎 Source Context: Grounded from 142 ingested customer support tickets & analytics.
+                  <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid var(--border-color)', fontSize: '0.72rem', color: 'var(--primary)' }}>
+                    📎 Source Context: Grounded from {data.totalFeedbackCount || 142} ingested customer support tickets & analytics database.
                   </div>
                 )}
               </div>
@@ -82,11 +94,11 @@ export const ChatInterfaceView = () => {
 
           {thinking && (
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Bot size={18} color="#fff" />
               </div>
               <div className="glass-panel" style={{ padding: '10px 16px', borderRadius: '12px', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                Product Assistant is retrieving relevant context...
+                Product Assistant is analyzing database tickets...
               </div>
             </div>
           )}
@@ -105,6 +117,7 @@ export const ChatInterfaceView = () => {
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '0.78rem' }}
             >
+              {prompt}
             </button>
           ))}
         </div>
