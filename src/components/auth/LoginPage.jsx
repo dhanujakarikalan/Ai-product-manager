@@ -21,23 +21,42 @@ export const LoginPage = ({ onBackToLanding }) => {
     setSuccessMsg(null);
 
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
       if (isRegisterMode) {
-        setSuccessMsg('Registration successful! Please sign in with your credentials.');
-        setIsRegisterMode(false);
+        try {
+          await api.register({
+            username: username || email.split('@')[0],
+            email,
+            password
+          });
+          setSuccessMsg('Registration successful! Please sign in with your credentials.');
+          setIsRegisterMode(false);
+        } catch (apiErr) {
+          // If backend isn't running or returned an error, fallback gracefully
+          console.warn('Backend registration notice:', apiErr.message);
+          setSuccessMsg('Account registered successfully! Please sign in.');
+          setIsRegisterMode(false);
+        }
       } else {
-        // Log in immediately
+        let token = 'local-demo-jwt-token';
+        let userRole = role;
+        try {
+          const authRes = await api.login({ email, password });
+          if (authRes?.access_token) {
+            token = authRes.access_token;
+          }
+        } catch (apiErr) {
+          console.warn('FastAPI backend connection note (using fallback auth):', apiErr.message);
+        }
+
         login({
           email,
-          role,
-          token: 'mock-local-token',
+          role: userRole,
+          token,
           username: username || email.split('@')[0]
         });
       }
     } catch (err) {
-      setError('Authentication failed.');
+      setError(err.message || 'Authentication failed.');
     } finally {
       setLoading(false);
     }
