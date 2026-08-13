@@ -8,14 +8,37 @@ export const PRDGeneratorModule = () => {
   const [activeView, setActiveView] = useState('preview'); // 'preview' or 'editor'
   const [generating, setGenerating] = useState(false);
 
-  const selectedPrd = data.prds.find(p => p.id === selectedPrdId) || data.prds[0];
+  const handleDownloadPrd = () => {
+    if (!selectedPrd) return;
+    const content = `# ${selectedPrd.title} (${selectedPrd.version})
+Author: ${selectedPrd.author} | Last Updated: ${selectedPrd.lastUpdated}
 
-  const handleSimulateAIDrafting = () => {
-    setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
-      alert('AI Generative Draft Completed! Added 2 new acceptance criteria scenarios and edge-case error handling.');
-    }, 1500);
+## Executive Overview
+${selectedPrd.overview}
+
+## 1. Problem Statement
+${selectedPrd.problemStatement || 'Customer support tickets report browser locks during 50k+ row exports.'}
+
+## 2. Target Personas & User Needs
+- Product Managers
+- Data Analysts & Enterprise Customers
+
+## 3. Solution & Technical Architecture
+Asynchronous background worker queue with real-time progress indicators and non-blocking download streams.
+
+## 4. Acceptance Criteria
+- Given user clicks Export on >50k rows
+- When background worker queues job
+- Then progress bar displays instantly without blocking UI
+`;
+
+    const element = document.createElement("a");
+    const file = new Blob([content], { type: 'text/markdown' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${selectedPrd.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   return (
@@ -50,6 +73,15 @@ export const PRDGeneratorModule = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={handleDownloadPrd} 
+              className="btn btn-primary btn-sm"
+              style={{ gap: '6px' }}
+              title="Download PRD document as Markdown file"
+            >
+              <Download size={14} />
+              <span>Download PRD</span>
+            </button>
             <button 
               onClick={() => setActiveView('preview')} 
               className="btn btn-sm"

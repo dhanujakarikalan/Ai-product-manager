@@ -149,10 +149,6 @@ export const UserStoriesView = () => {
             <Plus size={16} />
             <span>New User Story</span>
           </button>
-          <button onClick={() => alert('Exported User Stories to Jira & Linear format!')} className="btn btn-secondary" style={{ gap: '6px' }}>
-            <Download size={16} />
-            <span>Export to Jira</span>
-          </button>
         </div>
       </div>
 
