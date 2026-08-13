@@ -8,16 +8,26 @@ export const PRDGeneratorModule = () => {
   const [activeView, setActiveView] = useState('preview'); // 'preview' or 'editor'
   const [generating, setGenerating] = useState(false);
 
-  const handleDownloadPrd = () => {
-    if (!selectedPrd) return;
-    const content = `# ${selectedPrd.title} (${selectedPrd.version})
-Author: ${selectedPrd.author} | Last Updated: ${selectedPrd.lastUpdated}
+  const activePrd = data.prds.find(p => p.id === selectedPrdId) || data.prds[0] || {
+    title: 'PRD: Automated Report Export Engine',
+    version: 'v1.2',
+    author: 'Alex Rivera',
+    lastUpdated: 'Today at 11:30 AM',
+    overview: 'This document defines the engineering requirements for implementing an automated background report export engine.'
+  };
+  const selectedPrd = activePrd;
+
+  const handleDownloadPrd = (e) => {
+    if (e) e.preventDefault();
+    const doc = activePrd;
+    const content = `# ${doc.title} (${doc.version})
+Author: ${doc.author} | Last Updated: ${doc.lastUpdated}
 
 ## Executive Overview
-${selectedPrd.overview}
+${doc.overview || 'Overview of feature requirements.'}
 
 ## 1. Problem Statement
-${selectedPrd.problemStatement || 'Customer support tickets report browser locks during 50k+ row exports.'}
+${doc.problemStatement || 'Customer support tickets report browser locks during 50k+ row exports.'}
 
 ## 2. Target Personas & User Needs
 - Product Managers
@@ -32,13 +42,17 @@ Asynchronous background worker queue with real-time progress indicators and non-
 - Then progress bar displays instantly without blocking UI
 `;
 
-    const element = document.createElement("a");
-    const file = new Blob([content], { type: 'text/markdown' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${selectedPrd.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${(doc.title || 'prd_document').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
   };
 
   return (
