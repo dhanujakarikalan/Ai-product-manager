@@ -35,6 +35,9 @@ export const DashboardView = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.78rem', padding: '6px 12px', borderRadius: '20px', background: apiConnected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: apiConnected ? '#34d399' : '#fbbf24', border: '1px solid currentColor', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Server size={14} /> {apiConnected ? 'FastAPI Connected' : 'FastAPI Ready'}
+          </span>
           <button onClick={() => setActiveModule('upload')} className="btn btn-primary" style={{ gap: '6px' }}>
             <span>Upload New Data</span>
             <ArrowRight size={16} />
