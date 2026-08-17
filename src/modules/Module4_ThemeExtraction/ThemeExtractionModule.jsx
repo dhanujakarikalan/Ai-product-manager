@@ -32,9 +32,32 @@ export const ThemeExtractionModule = () => {
     setShowAddModal(false);
   };
 
+  const matchesCategory = (themeCat, selectedCat) => {
+    if (selectedCat === 'ALL') return true;
+    if (!themeCat) return true;
+    const cat = themeCat.toLowerCase();
+    const sel = selectedCat.toLowerCase();
+
+    if (sel === 'core infrastructure') {
+      return cat.includes('infra') || cat.includes('battery') || cat.includes('performance') || cat.includes('hardware') || cat.includes('network') || cat.includes('charging') || cat.includes('camera') || cat.includes('storage') || cat.includes('power');
+    }
+    if (sel === 'dashboard') {
+      return cat.includes('dash') || cat.includes('ui') || cat.includes('ux') || cat.includes('custom') || cat.includes('display') || cat.includes('theme') || cat.includes('layout');
+    }
+    if (sel === 'security') {
+      return cat.includes('sec') || cat.includes('auth') || cat.includes('sso') || cat.includes('login') || cat.includes('fingerprint') || cat.includes('password');
+    }
+    if (sel === 'workflow automation') {
+      return cat.includes('work') || cat.includes('auto') || cat.includes('export') || cat.includes('notif') || cat.includes('sync') || cat.includes('integration');
+    }
+    return cat.includes(sel);
+  };
+
   const filteredThemes = data.themes.filter(t => 
-    selectedCategory === 'ALL' || t.category.toLowerCase().includes(selectedCategory.toLowerCase())
+    matchesCategory(t.category || t.title, selectedCategory)
   );
+
+  const categoriesList = ['ALL', 'Core Infrastructure', 'Dashboard', 'Security', 'Workflow Automation'];
 
   return (
     <div className="animate-fade-in">
@@ -58,7 +81,7 @@ export const ThemeExtractionModule = () => {
       <div className="module-body">
         {/* Category Filters */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {['ALL', 'Core Infrastructure', 'Dashboard', 'Security', 'Workflow Automation'].map(cat => (
+          {categoriesList.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
