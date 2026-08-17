@@ -7,23 +7,39 @@ export const DashboardView = () => {
   const { data, chartData, setActiveModule, apiConnected } = useApp();
 
   const backend = data.backendMetrics || {};
-  const totalCount = data.totalFeedbackCount || 142;
-  const posCount = backend["Positive Feedback"] || 84;
-  const negCount = backend["Negative Feedback"] || 42;
-  const neuCount = backend["Neutral Feedback"] || 16;
+  const totalCount = data.totalFeedbackCount || data.feedbackItems?.length || 200;
+  
+  const posCount = data.positiveCount !== undefined ? data.positiveCount : (backend["Positive Feedback"] || Math.round(totalCount * 0.65));
+  const negCount = data.negativeCount !== undefined ? data.negativeCount : (backend["Negative Feedback"] || Math.round(totalCount * 0.25));
+  const neuCount = Math.max(0, totalCount - posCount - negCount);
 
-  // Transform backend categories or themes into chart data if present
-  const themeChartData = backend.Themes
-    ? Object.entries(backend.Themes).map(([name, tickets]) => ({ name, tickets }))
+  const posPct = Math.round((posCount / Math.max(1, totalCount)) * 100);
+  const negPct = Math.round((negCount / Math.max(1, totalCount)) * 100);
+  const posNeuPct = Math.min(100, Math.round(((posCount + neuCount) / Math.max(1, totalCount)) * 100));
+
+  // Dynamic Top Theme
+  const topThemeObj = data.themes?.[0] || { name: 'Performance', ticketCount: Math.round(totalCount * 0.4) };
+  const topThemeName = topThemeObj.name || topThemeObj.title || 'Performance';
+  const topThemeTickets = topThemeObj.ticketCount || topThemeObj.count || Math.round(totalCount * 0.4);
+
+  // Dynamic Top Pain Point
+  const topPainPointObj = data.backendPainPoints ? Object.entries(data.backendPainPoints)[0] : null;
+  const topPainPointName = topPainPointObj ? topPainPointObj[0] : (data.themes?.[0]?.title || 'Export Timeouts');
+  const topPainPointCount = topPainPointObj ? topPainPointObj[1] : Math.round(totalCount * 0.28);
+
+  // Dynamic Theme Chart Data
+  const themeChartData = data.categories?.length
+    ? data.categories.map(c => ({ name: c.name, tickets: c.count }))
+    : data.themes?.length
+    ? data.themes.map(t => ({ name: t.name || t.title, tickets: t.ticketCount || 20 }))
     : chartData.themeDistribution;
 
-  const sentimentPieData = backend["Positive Feedback"] !== undefined
-    ? [
-        { name: 'Positive', value: posCount, color: 'var(--accent-emerald)' },
-        { name: 'Negative', value: negCount, color: 'var(--accent-rose)' },
-        { name: 'Neutral', value: neuCount, color: 'var(--accent-cyan)' }
-      ]
-    : chartData.sentiment;
+  // Dynamic Sentiment Donut Data
+  const sentimentPieData = [
+    { name: 'Positive', value: posCount, color: '#10b981' },
+    { name: 'Neutral', value: neuCount, color: '#06b6d4' },
+    { name: 'Negative', value: negCount, color: '#f43f5e' }
+  ];
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '40px' }}>
@@ -69,7 +85,7 @@ export const DashboardView = () => {
           <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #10b981' }}>
             <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Positive %</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#34d399', marginTop: '4px' }}>
-              {Math.round((posCount / totalCount) * 100)}%
+              {posPct}%
             </div>
             <span style={{ fontSize: '0.72rem', color: '#34d399' }}>Satisfied users</span>
           </div>
@@ -77,7 +93,7 @@ export const DashboardView = () => {
           <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #f43f5e' }}>
             <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Negative %</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fb7185', marginTop: '4px' }}>
-              {Math.round((negCount / totalCount) * 100)}%
+              {negPct}%
             </div>
             <span style={{ fontSize: '0.72rem', color: '#fb7185' }}>Pain & friction</span>
           </div>
@@ -85,22 +101,22 @@ export const DashboardView = () => {
           <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #38bdf8' }}>
             <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Top Theme</div>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Performance
+              {topThemeName}
             </div>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>140 tickets</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{topThemeTickets} tickets</span>
           </div>
 
           <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #f59e0b' }}>
             <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Top Pain Point</div>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Battery Drain
+              {topPainPointName}
             </div>
-            <span style={{ fontSize: '0.72rem', color: '#fbbf24' }}>Critical severity</span>
+            <span style={{ fontSize: '0.72rem', color: '#fbbf24' }}>{topPainPointCount} complaints</span>
           </div>
 
           <div className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #c084fc' }}>
             <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Feature Requests</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#c084fc', marginTop: '4px' }}>{data.features.length}</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#c084fc', marginTop: '4px' }}>{data.features?.length || 3}</div>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Prioritized items</span>
           </div>
         </div>
@@ -138,7 +154,7 @@ export const DashboardView = () => {
           <div className="glass-panel" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Feedback Sentiment</h3>
-              <span className="badge badge-success" style={{ fontSize: '0.72rem' }}>72% Positive/Neutral</span>
+              <span className="badge badge-success" style={{ fontSize: '0.72rem' }}>{posNeuPct}% Positive/Neutral</span>
             </div>
             <div style={{ height: '260px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
               <ResponsiveContainer width="60%" height="100%">
