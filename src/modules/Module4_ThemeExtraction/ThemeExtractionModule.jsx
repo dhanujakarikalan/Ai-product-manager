@@ -119,10 +119,6 @@ export const ThemeExtractionModule = () => {
                       <span style={{ color: 'var(--text-dim)' }}>Tickets: </span>
                       <strong style={{ color: 'var(--text-main)' }}>{theme.ticketCount}</strong>
                     </div>
-                    <div>
-                      <span style={{ color: 'var(--text-dim)' }}>ARR Impact: </span>
-                      <strong style={{ color: isCritical ? '#f43f5e' : '#10b981' }}>{theme.affectedArr}</strong>
-                    </div>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -114,7 +114,7 @@ export const FeaturePrioritizationView = () => {
                         <div>
                           <div style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-main)' }}>{feat.title}</div>
                           <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '2px' }}>
-                            Upvotes: {feat.upvotes} • ARR: {feat.arrImpact || '$120K'}
+                            Upvotes: {feat.upvotes}
                           </div>
                         </div>
                       </div>
@@ -226,7 +226,7 @@ export const FeaturePrioritizationView = () => {
                   AI Score Explanation:
                 </div>
                 <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                  This feature ranks high due to strong feedback frequency ({selectedFeature.upvotes} requests) and high ARR opportunity ({selectedFeature.arrImpact || '$120K'}).
+                  This feature ranks high due to strong feedback frequency ({selectedFeature.upvotes} requests).
                 </p>
               </div>
             </div>
