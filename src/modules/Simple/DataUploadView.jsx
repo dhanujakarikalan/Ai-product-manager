@@ -71,6 +71,7 @@ export const DataUploadView = () => {
         rows_processed: resultPayload.rows_processed || 100,
         theme_summary: resultPayload.theme_summary || {},
         sentiment_summary: resultPayload.sentiment_summary || {},
+        categorization_summary: resultPayload.categorization_summary || {},
         pain_point_summary: resultPayload.pain_point_summary || {},
         feature_request_summary: resultPayload.feature_request_summary || {}
       });
