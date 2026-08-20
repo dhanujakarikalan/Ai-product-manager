@@ -6,6 +6,7 @@ from api.upload import router as upload_router
 from api.auth import router as auth_router
 from api.dashboard import router as dashboard_router
 from api.analytics import router as analytics_router
+from api.chat import router as chat_router
 
 # Import Database
 from database.database import Base, engine
@@ -38,6 +39,7 @@ app.include_router(upload_router, tags=["Upload"])
 app.include_router(auth_router, tags=["Authentication"])
 app.include_router(dashboard_router, tags=["Dashboard"])
 app.include_router(analytics_router, tags=["Analytics"])
+app.include_router(chat_router, tags=["Chat"])
 
 
 @app.get("/")

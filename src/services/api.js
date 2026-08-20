@@ -135,5 +135,22 @@ export const api = {
       throw new Error(data.detail || 'Failed to save feedback');
     }
     return data;
+  },
+
+  // Gemini AI Chat API endpoint
+  async sendChatMessage(prompt, databaseContext) {
+    const res = await fetch(`${API_BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        database_context: databaseContext || null
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Failed to generate Gemini AI response');
+    }
+    return data;
   }
 };
