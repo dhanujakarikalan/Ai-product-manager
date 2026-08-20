@@ -23,7 +23,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q2',
     status: 'Now',
     progress: 100,
-    assignee: 'Gagan G.',
+    assignee: 'Dhanuja K.',
     description: 'Automated CSV/Excel file parser and sentiment classification pipeline.'
   },
   {
@@ -33,7 +33,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q2',
     status: 'Now',
     progress: 60,
-    assignee: 'Syed Adnan',
+    assignee: 'Alex Rivera',
     description: 'Export structured product requirement documents to formatted PDF.'
   },
   {
@@ -43,7 +43,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q3',
     status: 'Now',
     progress: 85,
-    assignee: 'Syed Adnan',
+    assignee: 'Alex Rivera',
     description: 'Full high-contrast dark theme mode across all dashboard cards.'
   },
 
@@ -55,7 +55,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q3',
     status: 'Next',
     progress: 20,
-    assignee: 'Harshita N.',
+    assignee: 'Elena R.',
     description: 'Track customer lifetime value, ARR impact, and churn metrics.'
   },
 
@@ -67,7 +67,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q4',
     status: 'Later',
     progress: 15,
-    assignee: 'Akhila S.',
+    assignee: 'Marcus C.',
     description: 'REST API endpoints for batch extracting processed feedback records.'
   },
   {
@@ -97,7 +97,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q4',
     status: 'Later',
     progress: 10,
-    assignee: 'Alex M.',
+    assignee: 'Dhanuja K.',
     description: 'Support multi-currency Stripe checkout settlements.'
   },
   {
@@ -107,7 +107,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q4',
     status: 'Later',
     progress: 5,
-    assignee: 'Sarah K.',
+    assignee: 'Sarah C.',
     description: 'Real-time alert webhooks pushed into designated Slack channels.'
   },
   {
@@ -117,7 +117,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q4',
     status: 'Later',
     progress: 0,
-    assignee: 'Harshita N.',
+    assignee: 'Elena R.',
     description: 'Background worker thread for generating heavy monthly reports.'
   },
   {
@@ -127,7 +127,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q4',
     status: 'Later',
     progress: 0,
-    assignee: 'Gagan G.',
+    assignee: 'Dhanuja K.',
     description: 'Automated detection of sudden spikes in negative customer feedback.'
   },
 
@@ -139,7 +139,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q1',
     status: 'Shipped',
     progress: 100,
-    assignee: 'Alex M.',
+    assignee: 'Dhanuja K.',
     description: 'Sub-second search query index optimization.'
   },
   {
@@ -149,7 +149,7 @@ const INITIAL_ROADMAP_ITEMS = [
     quarter: 'Q1',
     status: 'Shipped',
     progress: 100,
-    assignee: 'Sarah K.',
+    assignee: 'Sarah C.',
     description: 'Okta SAML SSO and OAuth 2.0 social login integration.'
   }
 ];
@@ -166,7 +166,7 @@ export const RoadmapView = () => {
   const [newCategory, setNewCategory] = useState('UI/UX');
   const [newStatus, setNewStatus] = useState('Next');
   const [newQuarter, setNewQuarter] = useState('Q3');
-  const [newAssignee, setNewAssignee] = useState('Gagan G.');
+  const [newAssignee, setNewAssignee] = useState('Dhanuja K.');
   const [newProgress, setNewProgress] = useState(10);
   const [newDesc, setNewDesc] = useState('');
 
