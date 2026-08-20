@@ -27,6 +27,7 @@ export const Sidebar = () => {
     { id: 'prd', label: 'PRD Generator', icon: FileText, requiredPermission: null },
     { id: 'stories', label: 'User Stories', icon: BookOpen, requiredPermission: null },
     { id: 'prioritization', label: 'Feature Prioritization', icon: Sliders, requiredPermission: null },
+    { id: 'roadmap', label: 'Roadmap', icon: Map, requiredPermission: null },
     { id: 'chat', label: 'Product Assistant', icon: Bot, requiredPermission: null },
     { id: 'settings', label: 'Settings', icon: Settings, requiredPermission: 'manage_settings' }
   ];

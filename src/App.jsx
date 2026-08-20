@@ -12,6 +12,7 @@ import { ThemeExtractionModule } from './modules/Module4_ThemeExtraction/ThemeEx
 import { UserStoriesView } from './modules/Simple/UserStoriesView';
 import { PRDGeneratorModule } from './modules/Module7_PRDGenerator/PRDGeneratorModule';
 import { FeaturePrioritizationView } from './modules/Simple/FeaturePrioritizationView';
+import { RoadmapView } from './modules/Simple/RoadmapView';
 import { ChatInterfaceView } from './modules/Simple/ChatInterfaceView';
 import { SettingsView } from './modules/Simple/SettingsView';
 
@@ -34,6 +35,8 @@ const ModuleRouter = () => {
       return <PRDGeneratorModule />;
     case 'prioritization':
       return <FeaturePrioritizationView />;
+    case 'roadmap':
+      return <RoadmapView />;
     case 'chat':
     case 'assistant':
       return <ChatInterfaceView />;
