@@ -1,21 +1,17 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
-  Map, 
   Columns, 
   Calendar, 
   Zap, 
   Plus, 
   Download, 
   Sparkles, 
-  CheckCircle2, 
-  Clock, 
-  ChevronRight, 
-  FileText,
-  User,
-  ArrowRight,
-  Sliders,
-  X
+  ArrowRight, 
+  X,
+  ChevronLeft,
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 
 const INITIAL_ROADMAP_ITEMS = [
@@ -252,48 +248,56 @@ export const RoadmapView = () => {
     setTimeout(() => setImportedNotice(null), 4000);
   };
 
-  // Columns definition for Kanban
+  // Columns definition for Kanban with theme-aware colors
   const columns = [
-    { key: 'Now', label: 'Now', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.15)', badgeClass: 'badge-primary' },
-    { key: 'Next', label: 'Next', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)', badgeClass: 'badge-info' },
-    { key: 'Later', label: 'Later', color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)', badgeClass: 'badge-warning' },
-    { key: 'Shipped', label: 'Shipped', color: '#34d399', bg: 'rgba(16, 185, 129, 0.15)', badgeClass: 'badge-success' }
+    { key: 'Now', label: 'Now', color: '#6366f1', bg: 'rgba(99, 102, 241, 0.12)', border: 'rgba(99, 102, 241, 0.3)', subtitle: 'In Active Sprint' },
+    { key: 'Next', label: 'Next', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.12)', border: 'rgba(2, 132, 199, 0.3)', subtitle: 'Up Next' },
+    { key: 'Later', label: 'Later', color: '#d97706', bg: 'rgba(217, 119, 6, 0.12)', border: 'rgba(217, 119, 6, 0.3)', subtitle: 'Backlog Queue' },
+    { key: 'Shipped', label: 'Shipped', color: '#059669', bg: 'rgba(5, 150, 105, 0.12)', border: 'rgba(5, 150, 105, 0.3)', subtitle: 'Released Live' }
   ];
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '40px' }}>
-      {/* Header Bar matching screenshot */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+      {/* Header Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>Product Roadmap — Dynamic Workspace</h1>
-            <span style={{ fontSize: '1.2rem' }}>🗺️</span>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-main)' }}>Product Roadmap — Dynamic Workspace</h1>
+            <span style={{ fontSize: '1.3rem' }}>🗺️</span>
           </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.86rem', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: '#34d399', fontWeight: 600 }}>Dynamic Sync: Active Database Backend</span>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>Dynamic Sync: Active Database Backend</span>
             <span style={{ color: 'var(--text-dim)' }}>•</span>
-            <span>{items.length} total roadmap items</span>
+            <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{items.length} total roadmap items</span>
           </p>
         </div>
 
         {/* View Toggle Bar & Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {/* View Mode Tabs */}
-          <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+          <div style={{ 
+            display: 'flex', 
+            background: 'var(--bg-card)', 
+            padding: '4px', 
+            borderRadius: '10px', 
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
             <button
               onClick={() => setViewMode('timeline')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '6px 14px',
+                padding: '7px 14px',
                 borderRadius: '8px',
                 border: 'none',
                 backgroundColor: viewMode === 'timeline' ? 'var(--primary)' : 'transparent',
                 color: viewMode === 'timeline' ? '#fff' : 'var(--text-muted)',
                 fontSize: '0.82rem',
                 fontWeight: 600,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
               <Calendar size={14} />
@@ -306,14 +310,15 @@ export const RoadmapView = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '6px 14px',
+                padding: '7px 14px',
                 borderRadius: '8px',
                 border: 'none',
                 backgroundColor: viewMode === 'kanban' ? 'var(--primary)' : 'transparent',
                 color: viewMode === 'kanban' ? '#fff' : 'var(--text-muted)',
                 fontSize: '0.82rem',
                 fontWeight: 600,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
               <Columns size={14} />
@@ -326,14 +331,15 @@ export const RoadmapView = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '6px 14px',
+                padding: '7px 14px',
                 borderRadius: '8px',
                 border: 'none',
                 backgroundColor: viewMode === 'sprint' ? 'var(--primary)' : 'transparent',
                 color: viewMode === 'sprint' ? '#fff' : 'var(--text-muted)',
                 fontSize: '0.82rem',
                 fontWeight: 600,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
               <Zap size={14} />
@@ -364,7 +370,18 @@ export const RoadmapView = () => {
 
       {/* Imported Toast Notification */}
       {importedNotice && (
-        <div style={{ padding: '12px 18px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', borderRadius: '10px', marginBottom: '20px', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ 
+          padding: '12px 18px', 
+          background: 'rgba(5, 150, 105, 0.12)', 
+          border: '1px solid var(--accent-emerald)', 
+          color: 'var(--accent-emerald)', 
+          borderRadius: '10px', 
+          marginBottom: '20px', 
+          fontSize: '0.88rem', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px' 
+        }}>
           <Sparkles size={16} />
           <span>{importedNotice}</span>
         </div>
@@ -372,7 +389,7 @@ export const RoadmapView = () => {
 
       {/* ----------------- VIEW 1: KANBAN BOARD VIEW ----------------- */}
       {viewMode === 'kanban' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '20px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'start' }}>
           {columns.map(col => {
             const colItems = items.filter(item => item.status === col.key);
 
@@ -381,26 +398,28 @@ export const RoadmapView = () => {
                 key={col.key} 
                 className="glass-panel" 
                 style={{ 
-                  padding: '16px', 
-                  borderRadius: '14px', 
-                  background: 'rgba(15, 21, 35, 0.6)', 
+                  padding: '18px', 
+                  borderRadius: '16px', 
+                  backgroundColor: 'var(--bg-card)', 
                   border: '1px solid var(--border-color)',
+                  boxShadow: 'var(--shadow-sm)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '14px',
-                  minHeight: '480px'
+                  gap: '16px',
+                  minHeight: '520px'
                 }}
               >
                 {/* Column Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ 
-                      padding: '4px 10px', 
-                      borderRadius: '12px', 
-                      fontSize: '0.8rem', 
+                      padding: '4px 12px', 
+                      borderRadius: '20px', 
+                      fontSize: '0.82rem', 
                       fontWeight: 700, 
                       backgroundColor: col.bg, 
                       color: col.color,
+                      border: `1px solid ${col.border}`,
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '6px'
@@ -408,8 +427,8 @@ export const RoadmapView = () => {
                       {col.label} ({colItems.length})
                     </span>
                   </div>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)', fontWeight: 600 }}>
-                    {col.key === 'Now' ? 'In Active Sprint' : col.key === 'Next' ? 'Up Next' : col.key === 'Later' ? 'Backlog Queue' : 'Released Live'}
+                  <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {col.subtitle}
                   </span>
                 </div>
 
@@ -422,44 +441,45 @@ export const RoadmapView = () => {
                       style={{ 
                         padding: '16px', 
                         borderRadius: '12px',
-                        background: 'rgba(20, 27, 45, 0.85)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        backgroundColor: 'var(--bg-card-hover)',
+                        border: '1px solid var(--border-color)',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '12px',
-                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
-                        transition: 'transform 0.2s ease, border-color 0.2s ease'
+                        boxShadow: 'var(--shadow-sm)',
+                        transition: 'all 0.2s ease'
                       }}
                     >
                       {/* Top Badges (Category & Quarter) */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ 
-                          fontSize: '0.7rem', 
+                          fontSize: '0.72rem', 
                           fontWeight: 700, 
-                          padding: '3px 8px', 
+                          padding: '3px 10px', 
                           borderRadius: '6px', 
-                          background: 'rgba(255, 255, 255, 0.08)', 
-                          color: 'var(--text-dim)',
+                          backgroundColor: 'var(--bg-card)', 
+                          color: 'var(--primary)',
+                          border: '1px solid var(--border-color)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.04em'
                         }}>
                           {item.category}
                         </span>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>
                           {item.quarter}
                         </span>
                       </div>
 
                       {/* Title */}
-                      <h4 style={{ fontSize: '0.96rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.3 }}>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.35 }}>
                         {item.title}
                       </h4>
 
                       {/* Progress Slider Bar */}
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                           <span>Progress</span>
-                          <strong style={{ color: item.progress === 100 ? '#34d399' : 'var(--text-main)' }}>{item.progress}%</strong>
+                          <strong style={{ color: item.progress === 100 ? 'var(--accent-emerald)' : 'var(--text-main)' }}>{item.progress}%</strong>
                         </div>
                         <input 
                           type="range" 
@@ -472,30 +492,30 @@ export const RoadmapView = () => {
                             width: '100%', 
                             height: '6px', 
                             borderRadius: '3px', 
-                            accentColor: item.progress === 100 ? '#10b981' : 'var(--primary)',
+                            accentColor: item.progress === 100 ? 'var(--accent-emerald)' : 'var(--primary)',
                             cursor: 'pointer' 
                           }}
                         />
                       </div>
 
                       {/* Footer Row (Assignee & Generate PRD Button) */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <div style={{ 
-                            width: '22px', 
-                            height: '22px', 
+                            width: '24px', 
+                            height: '24px', 
                             borderRadius: '50%', 
-                            background: 'linear-gradient(135deg, #6366f1, #a855f7)', 
+                            backgroundColor: 'var(--primary)', 
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
-                            fontSize: '0.65rem',
+                            fontSize: '0.7rem',
                             fontWeight: 700,
                             color: '#fff'
                           }}>
                             {item.assignee ? item.assignee.charAt(0) : 'P'}
                           </div>
-                          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                             {item.assignee}
                           </span>
                         </div>
@@ -505,19 +525,37 @@ export const RoadmapView = () => {
                           {col.key !== 'Now' && (
                             <button 
                               onClick={() => handleMoveColumn(item.id, 'prev')}
-                              title="Move back"
-                              style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '0.75rem' }}
+                              title="Move back column"
+                              style={{ 
+                                padding: '3px 6px',
+                                borderRadius: '4px',
+                                background: 'var(--bg-card)', 
+                                border: '1px solid var(--border-color)', 
+                                color: 'var(--text-muted)', 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
                             >
-                              ◀
+                              <ChevronLeft size={14} />
                             </button>
                           )}
                           {col.key !== 'Shipped' && (
                             <button 
                               onClick={() => handleMoveColumn(item.id, 'next')}
-                              title="Move next"
-                              style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '0.75rem' }}
+                              title="Move next column"
+                              style={{ 
+                                padding: '3px 6px',
+                                borderRadius: '4px',
+                                background: 'var(--bg-card)', 
+                                border: '1px solid var(--border-color)', 
+                                color: 'var(--text-muted)', 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
                             >
-                              ▶
+                              <ChevronRight size={14} />
                             </button>
                           )}
 
@@ -526,10 +564,9 @@ export const RoadmapView = () => {
                             className="btn btn-primary btn-sm"
                             style={{ 
                               padding: '4px 10px', 
-                              fontSize: '0.72rem', 
+                              fontSize: '0.74rem', 
                               borderRadius: '6px',
-                              gap: '4px',
-                              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+                              gap: '4px'
                             }}
                           >
                             <span>Generate PRD</span>
@@ -540,7 +577,7 @@ export const RoadmapView = () => {
                   ))}
 
                   {colItems.length === 0 && (
-                    <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem', border: '1px dashed var(--border-color)', borderRadius: '10px' }}>
+                    <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.82rem', border: '1px dashed var(--border-color)', borderRadius: '10px' }}>
                       No items in {col.label}
                     </div>
                   )}
@@ -553,10 +590,10 @@ export const RoadmapView = () => {
 
       {/* ----------------- VIEW 2: TIMELINE VIEW ----------------- */}
       {viewMode === 'timeline' && (
-        <div className="glass-panel" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px' }}>Roadmap Timeline Schedule (Q1 - Q4 2026)</h3>
+        <div className="glass-panel" style={{ padding: '24px', backgroundColor: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px', color: 'var(--text-main)' }}>Roadmap Timeline Schedule (Q1 - Q4 2026)</h3>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-dim)', textAlign: 'left' }}>
                   <th style={{ padding: '12px', width: '30%' }}>Feature Item</th>
@@ -568,10 +605,10 @@ export const RoadmapView = () => {
               </thead>
               <tbody>
                 {items.map(item => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '14px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
                       <div>{item.title}</div>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontWeight: 400 }}>{item.category}</span>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)', fontWeight: 400 }}>{item.category}</span>
                     </td>
                     <td style={{ padding: '14px 12px' }}>
                       <span className={`badge ${item.status === 'Now' ? 'badge-primary' : item.status === 'Next' ? 'badge-info' : item.status === 'Shipped' ? 'badge-success' : 'badge-warning'}`}>
@@ -581,10 +618,10 @@ export const RoadmapView = () => {
                     <td style={{ padding: '14px 12px', color: 'var(--text-muted)' }}>{item.quarter}</td>
                     <td style={{ padding: '14px 12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${item.progress}%`, height: '100%', background: item.progress === 100 ? '#10b981' : 'var(--primary)' }} />
+                        <div style={{ flex: 1, height: '8px', background: 'var(--bg-card-hover)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                          <div style={{ width: `${item.progress}%`, height: '100%', background: item.progress === 100 ? 'var(--accent-emerald)' : 'var(--primary)' }} />
                         </div>
-                        <span style={{ fontSize: '0.76rem', fontWeight: 600 }}>{item.progress}%</span>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-main)' }}>{item.progress}%</span>
                       </div>
                     </td>
                     <td style={{ padding: '14px 12px', textAlign: 'right', color: 'var(--text-muted)' }}>{item.assignee}</td>
@@ -605,17 +642,17 @@ export const RoadmapView = () => {
             { name: 'Sprint 3 (Planning)', items: items.filter(i => i.status === 'Later').slice(0, 3) },
             { name: 'Backlog Queue', items: items.filter(i => i.status === 'Later').slice(3) }
           ].map((sprint, idx) => (
-            <div key={idx} className="glass-panel" style={{ padding: '18px' }}>
+            <div key={idx} className="glass-panel" style={{ padding: '20px', backgroundColor: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '14px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
                 ⚡ {sprint.name} ({sprint.items.length})
               </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {sprint.items.map(item => (
-                  <div key={item.id} className="glass-card" style={{ padding: '12px' }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-main)' }}>{item.title}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', color: 'var(--text-dim)', marginTop: '6px' }}>
+                  <div key={item.id} className="glass-card" style={{ padding: '14px', backgroundColor: 'var(--bg-card-hover)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>{item.title}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                       <span>{item.category}</span>
-                      <span>{item.progress}% Done</span>
+                      <strong style={{ color: 'var(--primary)' }}>{item.progress}% Done</strong>
                     </div>
                   </div>
                 ))}
@@ -640,7 +677,7 @@ export const RoadmapView = () => {
           zIndex: 1000,
           padding: '20px'
         }}>
-          <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '480px', padding: '24px', position: 'relative' }}>
+          <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '480px', padding: '24px', position: 'relative', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
             <button 
               onClick={() => setShowAddModal(false)}
               style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
@@ -648,7 +685,7 @@ export const RoadmapView = () => {
               <X size={18} />
             </button>
 
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px' }}>+ Add Roadmap Feature</h3>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px', color: 'var(--text-main)' }}>+ Add Roadmap Feature</h3>
 
             <form onSubmit={handleAddFeature} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
@@ -659,7 +696,7 @@ export const RoadmapView = () => {
                   placeholder="e.g., Automated Stripe Tax Settlement" 
                   value={newTitle} 
                   onChange={e => setNewTitle(e.target.value)} 
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}
                 />
               </div>
 
@@ -669,7 +706,7 @@ export const RoadmapView = () => {
                   <select 
                     value={newCategory} 
                     onChange={e => setNewCategory(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#0f1523', border: '1px solid var(--border-color)', color: '#fff' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}
                   >
                     <option value="UI/UX">UI/UX</option>
                     <option value="Ingestion">Ingestion</option>
@@ -687,7 +724,7 @@ export const RoadmapView = () => {
                   <select 
                     value={newStatus} 
                     onChange={e => setNewStatus(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#0f1523', border: '1px solid var(--border-color)', color: '#fff' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}
                   >
                     <option value="Now">Now</option>
                     <option value="Next">Next</option>
@@ -705,7 +742,7 @@ export const RoadmapView = () => {
                     placeholder="e.g. Q3" 
                     value={newQuarter} 
                     onChange={e => setNewQuarter(e.target.value)} 
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}
                   />
                 </div>
 
@@ -716,7 +753,7 @@ export const RoadmapView = () => {
                     placeholder="e.g. Gagan G." 
                     value={newAssignee} 
                     onChange={e => setNewAssignee(e.target.value)} 
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}
                   />
                 </div>
               </div>
