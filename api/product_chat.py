@@ -1,82 +1,97 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException
+
 from pydantic import BaseModel
 
-from services.product_chat import (
+from services.product_chat_service import (
     ProductChatService
 )
 
 from services import app_state
 
 
-# =====================================================
+# =========================================================
 # REQUEST MODEL
-# =====================================================
+# =========================================================
 
-class ChatRequest(BaseModel):
+class ProductChatRequest(BaseModel):
 
     question: str
 
 
-# =====================================================
+# =========================================================
 # ROUTER
-# =====================================================
+# =========================================================
 
 router = APIRouter(
+
     prefix="/product-chat",
+
     tags=["Product Chat"]
 )
 
 
-# =====================================================
+# =========================================================
 # SERVICE
-# =====================================================
+# =========================================================
 
-chat_service = ProductChatService()
+product_chat_service = ProductChatService()
 
 
-# =====================================================
-# CHAT
-# =====================================================
+# =========================================================
+# PRODUCT CHAT
+# =========================================================
 
-@router.post("/ask")
-def ask_product_question(
-    request: ChatRequest
+@router.post("/")
+def product_chat(
+    request: ProductChatRequest
 ):
 
-    # =================================================
-    # STEP 1: CHECK DATASET
-    # =================================================
+    # =====================================================
+    # STEP 1: CHECK QUESTION
+    # =====================================================
 
-    if app_state.processed_df is None:
+    if not request.question.strip():
 
         raise HTTPException(
+
             status_code=400,
-            detail="Please upload dataset first."
+
+            detail="Question is required."
         )
 
 
-    # =================================================
-    # STEP 2: GET PRODUCT INFORMATION
-    # =================================================
+    # =====================================================
+    # STEP 2: GET PROCESSED DATASET
+    # =====================================================
 
     df = app_state.processed_df
 
+
+    # =====================================================
+    # STEP 3: GET GENERATED PRD
+    # =====================================================
+
     prd = app_state.generated_prd
+
+
+    # =====================================================
+    # STEP 4: GET USER STORIES
+    # =====================================================
 
     user_stories = (
         app_state.generated_user_stories
     )
 
-    tasks = app_state.generated_tasks
 
-
-    # =================================================
-    # STEP 3: GENERATE ANSWER
-    # =================================================
+    # =====================================================
+    # STEP 5: PRODUCT CHAT
+    # =====================================================
 
     try:
 
-        result = chat_service.chat(
+        result = product_chat_service.chat(
 
             question=request.question,
 
@@ -84,34 +99,43 @@ def ask_product_question(
 
             prd=prd,
 
-            user_stories=user_stories,
-
-            tasks=tasks
+            user_stories=user_stories
         )
 
 
         # =================================================
-        # STEP 4: STORE RESPONSE
+        # STEP 6: CHECK RESULT
         # =================================================
 
-        app_state.product_chat_response = (
-            result.get(
-                "answer",
-                ""
+        if result.get("status") != "success":
+
+            raise HTTPException(
+
+                status_code=400,
+
+                detail=result.get(
+
+                    "message",
+
+                    "Product Chat failed."
+                )
             )
-        )
 
 
         # =================================================
-        # STEP 5: RETURN
+        # STEP 7: RETURN
         # =================================================
 
         return {
 
-            "status": "success",
+            "status":
+                "success",
 
             "question":
-                request.question,
+                result.get(
+                    "question",
+                    request.question
+                ),
 
             "answer":
                 result.get(
@@ -127,6 +151,11 @@ def ask_product_question(
         }
 
 
+    except HTTPException:
+
+        raise
+
+
     except Exception as e:
 
         raise HTTPException(
@@ -134,6 +163,6 @@ def ask_product_question(
             status_code=500,
 
             detail=(
-                f"Product chat failed: {str(e)}"
+                f"Product Chat failed: {str(e)}"
             )
         )

@@ -10,24 +10,28 @@ class ProductChatService:
         self.rag = RAGService()
 
 
+    # =====================================================
+    # PRODUCT CHAT
+    # =====================================================
+
     def chat(
         self,
         question,
         df=None,
         prd=None,
-        user_stories=None,
-        tasks=None
+        user_stories=None
     ):
 
         # =================================================
         # STEP 1: CHECK QUESTION
         # =================================================
 
-        if not question:
+        if not question or not str(question).strip():
 
             return {
                 "status": "failed",
-                "message": "Question is required."
+                "message": "Question is required.",
+                "answer": ""
             }
 
 
@@ -36,6 +40,7 @@ class ProductChatService:
         # =================================================
 
         dataset_context = ""
+
 
         if df is not None:
 
@@ -47,7 +52,7 @@ class ProductChatService:
 
 
             # ---------------------------------------------
-            # Category
+            # CATEGORY
             # ---------------------------------------------
 
             if "category" in df.columns:
@@ -65,7 +70,7 @@ class ProductChatService:
 
 
             # ---------------------------------------------
-            # Sentiment
+            # SENTIMENT
             # ---------------------------------------------
 
             if "sentiment" in df.columns:
@@ -83,7 +88,7 @@ class ProductChatService:
 
 
             # ---------------------------------------------
-            # Themes
+            # THEME
             # ---------------------------------------------
 
             if "theme" in df.columns:
@@ -101,7 +106,7 @@ class ProductChatService:
 
 
             # ---------------------------------------------
-            # Pain Points
+            # PAIN POINT
             # ---------------------------------------------
 
             if "pain_point" in df.columns:
@@ -119,7 +124,7 @@ class ProductChatService:
 
 
             # ---------------------------------------------
-            # Feature Requests
+            # FEATURE REQUEST
             # ---------------------------------------------
 
             if "feature_request" in df.columns:
@@ -142,66 +147,113 @@ class ProductChatService:
 
         relevant_feedback = (
             self.rag.retrieve_relevant_feedback(
+
                 query=question,
+
                 top_k=10
             )
         )
 
 
         # =================================================
-        # STEP 4: CREATE RAG CONTEXT
+        # STEP 4: RAG CONTEXT
         # =================================================
 
         rag_context = ""
 
+
         for item in relevant_feedback:
 
-            rag_context += (
-                f"- {item.get('feedback', '')}\n"
+            feedback = item.get(
+                "feedback",
+                ""
+            )
+
+            if feedback:
+
+                rag_context += (
+                    f"- {feedback}\n"
+                )
+
+
+        if not rag_context:
+
+            rag_context = (
+                "No relevant customer feedback was retrieved."
             )
 
 
         # =================================================
-        # STEP 5: CREATE PRODUCT CONTEXT
+        # STEP 5: PRD CONTEXT
+        # =================================================
+
+        prd_context = (
+
+            prd
+            if prd
+            else
+            "PRD has not been generated yet."
+        )
+
+
+        # =================================================
+        # STEP 6: USER STORY CONTEXT
+        # =================================================
+
+        user_story_context = (
+
+            user_stories
+            if user_stories
+            else
+            "User stories have not been generated yet."
+        )
+
+
+        # =================================================
+        # STEP 7: COMPLETE PRODUCT CONTEXT
         # =================================================
 
         product_context = f"""
 
-DATASET ANALYSIS:
+=========================================================
+DATASET ANALYSIS
+=========================================================
 
 {dataset_context}
 
 
-RAG RETRIEVED CUSTOMER FEEDBACK:
+=========================================================
+RAG RETRIEVED CUSTOMER FEEDBACK
+=========================================================
 
 {rag_context}
 
 
-GENERATED PRD:
+=========================================================
+GENERATED PRD
+=========================================================
 
-{prd if prd else "PRD has not been generated yet."}
-
-
-GENERATED USER STORIES:
-
-{user_stories if user_stories else "User stories have not been generated yet."}
+{prd_context}
 
 
-GENERATED DEVELOPMENT TASKS:
+=========================================================
+USER STORIES AND WORK ITEMS
+=========================================================
 
-{tasks if tasks else "Development tasks have not been generated yet."}
+{user_story_context}
+
 """
 
 
         # =================================================
-        # STEP 6: CREATE CHAT PROMPT
+        # STEP 8: PRODUCT MANAGER PROMPT
         # =================================================
 
         prompt = f"""
 You are an AI Product Manager Copilot.
 
-Answer the Product Manager's question using
-the available product information.
+Answer the Product Manager's question using the
+provided product information.
 
 PRODUCT INFORMATION:
 
@@ -213,40 +265,63 @@ PRODUCT MANAGER QUESTION:
 {question}
 
 
-IMPORTANT RULES:
+=========================================================
+ANSWERING RULES
+=========================================================
 
 1. Use the provided product information as the
    primary source.
 
-2. Use RAG-retrieved feedback when the question
-   relates to customer feedback.
+2. For questions about overall customer feedback,
+   use the Dataset Analysis.
 
-3. Do not invent customer feedback.
+3. For questions about specific customer problems,
+   use RAG-retrieved customer feedback when available.
 
-4. Do not claim something came from customers
-   unless it is supported by the provided data.
+4. For questions about the product requirements,
+   use the PRD.
 
-5. If the information is unavailable, clearly say
-   that the information is not available.
+5. For questions about functional requirements,
+   use the PRD.
 
-6. Give a concise but useful Product Manager
-   oriented answer.
+6. For questions about user stories,
+   use the User Stories section.
 
-7. When appropriate, explain the reasoning using
-   the available data.
+7. For questions about acceptance criteria,
+   use the User Stories section.
 
-8. If the question concerns the PRD, use the PRD.
+8. For questions about development work,
+   use the Work Items contained inside the User Stories.
 
-9. If the question concerns user stories, use the
-   generated user stories.
+9. Do not invent customer feedback.
 
-10. If the question concerns development work,
-    use the generated tasks.
+10. Do not claim that customers said something unless
+    it is supported by the provided information.
+
+11. Do not invent product requirements.
+
+12. If the requested information is unavailable,
+    clearly say that the information is not available.
+
+13. When useful, include supporting numbers from
+    the dataset.
+
+14. Keep the response concise but useful for a
+    Product Manager.
+
+15. Explain the reasoning when it helps the Product
+    Manager understand the decision.
+
+16. Do not expose internal implementation details
+    unless specifically asked.
+
+
+Now answer the Product Manager's question.
 """
 
 
         # =================================================
-        # STEP 7: GEMINI
+        # STEP 9: GEMINI
         # =================================================
 
         answer = self.llm.generate(
@@ -255,16 +330,19 @@ IMPORTANT RULES:
 
 
         # =================================================
-        # STEP 8: RETURN
+        # STEP 10: RETURN
         # =================================================
 
         return {
 
-            "status": "success",
+            "status":
+                "success",
 
-            "question": question,
+            "question":
+                question,
 
-            "answer": answer,
+            "answer":
+                answer,
 
             "retrieved_feedback":
                 relevant_feedback

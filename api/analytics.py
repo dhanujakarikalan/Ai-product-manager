@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-import services.app_state as app_state
+from services import app_state
 
 router = APIRouter(
     prefix="/analytics",
@@ -7,144 +7,136 @@ router = APIRouter(
 )
 
 
-def get_dataframe():
+@router.get("/")
+def get_analytics():
+
+    # ==========================================
+    # 1. CHECK DATASET
+    # ==========================================
 
     if app_state.processed_df is None:
+
         raise HTTPException(
             status_code=400,
-            detail="Please upload a dataset first."
+            detail="Please upload dataset first."
         )
 
-    return app_state.processed_df
+    df = app_state.processed_df
 
+    # ==========================================
+    # 2. TOTAL FEEDBACK
+    # ==========================================
 
-# ==================================================
-# CATEGORIES
-# ==================================================
+    total_feedback = len(df)
 
-@router.get("/categories")
-def categories():
+    # ==========================================
+    # 3. CATEGORY
+    # ==========================================
 
-    df = get_dataframe()
+    if "category" in df.columns:
 
-    if "category" not in df.columns:
-        return {
-            "message": "Category column not found"
-        }
-
-    return {
-        "categories": df["category"]
-        .value_counts()
-        .to_dict()
-    }
-
-
-# ==================================================
-# THEMES
-# ==================================================
-
-@router.get("/themes")
-def themes():
-
-    df = get_dataframe()
-
-    if "theme" not in df.columns:
-        return {
-            "message": "Theme column not found"
-        }
-
-    return {
-        "themes": df["theme"]
-        .value_counts()
-        .to_dict()
-    }
-
-
-# ==================================================
-# SENTIMENTS
-# ==================================================
-
-@router.get("/sentiments")
-def sentiments():
-
-    df = get_dataframe()
-
-    if "sentiment" not in df.columns:
-        return {
-            "message": "Sentiment column not found"
-        }
-
-    return {
-        "sentiments": df["sentiment"]
-        .value_counts()
-        .to_dict()
-    }
-
-
-# ==================================================
-# PAIN POINTS
-# ==================================================
-
-@router.get("/pain-points")
-def pain_points():
-
-    df = get_dataframe()
-
-    if "pain_point" not in df.columns:
-        return {
-            "message": "Pain Point column not found"
-        }
-
-    return {
-        "pain_points": df["pain_point"]
-        .value_counts()
-        .to_dict()
-    }
-
-
-# ==================================================
-# FEATURE REQUESTS
-# ==================================================
-
-@router.get("/feature-requests")
-def feature_requests():
-
-    df = get_dataframe()
-
-    if "feature_request" not in df.columns:
-        return {
-            "message": "Feature Request column not found"
-        }
-
-    return {
-        "feature_requests": df["feature_request"]
-        .value_counts()
-        .to_dict()
-    }
-
-
-# ==================================================
-# TRENDS
-# ==================================================
-
-@router.get("/trends")
-def trends():
-
-    df = get_dataframe()
-
-    if "date" not in df.columns:
-        return {
-            "message": "Date column not found"
-        }
-
-    trend = (
-        df.groupby("date")
-        .size()
-        .reset_index(name="count")
-    )
-
-    return {
-        "trends": trend.to_dict(
-            orient="records"
+        category_summary = (
+            df["category"]
+            .fillna("Unknown")
+            .value_counts()
+            .to_dict()
         )
+
+    else:
+
+        category_summary = {}
+
+    # ==========================================
+    # 4. SENTIMENT
+    # ==========================================
+
+    if "sentiment" in df.columns:
+
+        sentiment_summary = (
+            df["sentiment"]
+            .fillna("Unknown")
+            .value_counts()
+            .to_dict()
+        )
+
+    else:
+
+        sentiment_summary = {}
+
+    # ==========================================
+    # 5. THEME
+    # ==========================================
+
+    if "theme" in df.columns:
+
+        theme_summary = (
+            df["theme"]
+            .fillna("Unknown")
+            .value_counts()
+            .to_dict()
+        )
+
+    else:
+
+        theme_summary = {}
+
+    # ==========================================
+    # 6. PAIN POINT
+    # ==========================================
+
+    if "pain_point" in df.columns:
+
+        pain_point_summary = (
+            df["pain_point"]
+            .fillna("Unknown")
+            .value_counts()
+            .to_dict()
+        )
+
+    else:
+
+        pain_point_summary = {}
+
+    # ==========================================
+    # 7. FEATURE REQUEST
+    # ==========================================
+
+    if "feature_request" in df.columns:
+
+        feature_request_summary = (
+            df["feature_request"]
+            .fillna("Unknown")
+            .value_counts()
+            .to_dict()
+        )
+
+    else:
+
+        feature_request_summary = {}
+
+    # ==========================================
+    # 8. RETURN
+    # ==========================================
+
+    return {
+
+        "status": "success",
+
+        "total_feedback":
+            total_feedback,
+
+        "category_summary":
+            category_summary,
+
+        "sentiment_summary":
+            sentiment_summary,
+
+        "theme_summary":
+            theme_summary,
+
+        "pain_point_summary":
+            pain_point_summary,
+
+        "feature_request_summary":
+            feature_request_summary
     }

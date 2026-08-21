@@ -5,27 +5,51 @@ import os
 
 from services.pipeline import FeedbackPipeline
 from services.rag_service import RAGService
+from services.milestone4_service import Milestone4Service
+
 import services.app_state as app_state
 
 
-router = APIRouter(tags=["Upload"])
+# =========================================================
+# ROUTER
+# =========================================================
+
+router = APIRouter(
+    tags=["Upload"]
+)
+
+
+# =========================================================
+# SERVICES
+# =========================================================
 
 pipeline = FeedbackPipeline()
+
 rag_service = RAGService()
 
+milestone4_service = Milestone4Service()
+
+
+# =========================================================
+# UPLOAD DATASET
+# =========================================================
 
 @router.post("/upload")
 async def upload_file(
     file: UploadFile = File(...)
 ):
 
+    temp_path = None
+
     try:
 
-        # ==================================================
-        # Save uploaded file temporarily
-        # ==================================================
+        # =================================================
+        # 1. SAVE FILE TEMPORARILY
+        # =================================================
 
-        suffix = os.path.splitext(file.filename)[1]
+        suffix = os.path.splitext(
+            file.filename
+        )[1]
 
         with tempfile.NamedTemporaryFile(
             delete=False,
@@ -38,87 +62,60 @@ async def upload_file(
 
             temp_path = temp_file.name
 
-
-        # ==================================================
-        # Temporary File Information
-        # ==================================================
-
         print("\n" + "=" * 60)
-        print("Temporary File Created Successfully")
+        print("DATASET UPLOAD")
         print("=" * 60)
 
         print(
-            "Uploaded File Name :",
+            "File:",
             file.filename
         )
 
-        print(
-            "Temporary File Path:",
+        # =================================================
+        # 2. RUN EXISTING FEEDBACK PIPELINE
+        # =================================================
+
+        print("\nRunning Feedback Pipeline...")
+
+        result = pipeline.run(
             temp_path
         )
 
-        print(
-            "File Exists        :",
-            os.path.exists(temp_path)
-        )
+        # =================================================
+        # 3. STORE PROCESSED DATA
+        # =================================================
 
-        print("=" * 60 + "\n")
-
-
-        # ==================================================
-        # Run Complete Feedback Pipeline
-        # ==================================================
-
-        result = pipeline.run(temp_path)
-
-
-        # ==================================================
-        # Store Processed DataFrame in Shared App State
-        # ==================================================
-
-        app_state.processed_df = result[
+        processed_df = result[
             "processed_dataframe"
         ]
 
-        app_state.pipeline_result = result
+        app_state.processed_df = (
+            processed_df
+        )
 
-        app_state.dataset_uploaded = True
+        app_state.pipeline_result = (
+            result
+        )
 
-
-        processed_df = app_state.processed_df
-
-
-        # ==================================================
-        # Print DataFrame Information
-        # ==================================================
-
-        print("\n" + "=" * 60)
-        print("Processed DataFrame")
-        print("=" * 60)
-
-        print(
-            "Rows    :",
-            processed_df.shape[0]
+        app_state.dataset_uploaded = (
+            True
         )
 
         print(
-            "Columns :",
-            processed_df.shape[1]
+            "Rows:",
+            len(processed_df)
         )
 
         print(
-            processed_df.head()
+            "Columns:",
+            list(processed_df.columns)
         )
 
-        print("=" * 60 + "\n")
-
-
-        # ==================================================
-        # CREATE FEEDBACK LIST FOR RAG
-        # ==================================================
+        # =================================================
+        # 4. CREATE FEEDBACK LIST
+        # =================================================
 
         feedback_list = []
-
 
         if "feedback" in processed_df.columns:
 
@@ -132,71 +129,70 @@ async def upload_file(
                 )
             )
 
-        else:
+        app_state.feedback_list = (
+            feedback_list
+        )
 
-            print(
-                "WARNING: 'feedback' column "
-                "not found in processed dataframe."
-            )
-
-
-        # ==================================================
-        # Store Feedback List in Shared State
-        # ==================================================
-
-        app_state.feedback_list = feedback_list
-
-
-        # ==================================================
-        # CREATE FAISS VECTOR STORE
-        # ==================================================
+        # =================================================
+        # 5. CREATE FAISS VECTOR STORE
+        # =================================================
 
         if feedback_list:
 
-            print("\n" + "=" * 60)
-            print("Creating FAISS Vector Store...")
-            print("=" * 60)
+            print(
+                "\nCreating FAISS Vector Store..."
+            )
 
             rag_service.create_vectorstore(
                 feedback_list
             )
 
             print(
-                "FAISS Vector Store Created Successfully"
+                "FAISS Vector Store Created."
             )
 
-            print(
-                "Vector Store Location: vectorstore/"
+        # =================================================
+        # 6. RUN MILESTONE 4 AUTOMATICALLY
+        # =================================================
+
+        print("\n" + "=" * 60)
+
+        print(
+            "STARTING MILESTONE 4"
+        )
+
+        print("=" * 60)
+
+        milestone4_result = (
+            milestone4_service.run(
+
+                processed_df=processed_df,
+
+                pipeline_result=result
             )
+        )
 
-            print("=" * 60 + "\n")
+        print(
+            "\nMilestone 4 Completed."
+        )
 
-        else:
-
-            print(
-                "No feedback data available "
-                "for vector store."
-            )
-
-
-        # ==================================================
-        # RETURN API RESPONSE
-        # ==================================================
+        # =================================================
+        # 7. RETURN COMPLETE RESULT
+        # =================================================
 
         return {
 
-            "status": "Success",
+            "status":
+                "Success",
 
             "message":
-                "Dataset uploaded, processed, "
-                "analytics generated, and "
-                "FAISS vector store created.",
+                (
+                    "Dataset uploaded and "
+                    "Milestone 4 completed successfully."
+                ),
 
             "file_name":
                 file.filename,
-
-            "temporary_file_path":
-                temp_path,
 
             "rows_processed":
                 len(processed_df),
@@ -204,65 +200,133 @@ async def upload_file(
             "dataset_available":
                 True,
 
-            "vector_store":
-                "FAISS",
-
-            "vector_store_path":
-                "vectorstore/feedback.index",
+            # ---------------------------------------------
+            # EXISTING PIPELINE
+            # ---------------------------------------------
 
             "validation_report":
-                result[
+                result.get(
                     "validation_report"
-                ],
+                ),
 
             "cleaning_report":
-                result[
+                result.get(
                     "cleaning_report"
-                ],
+                ),
 
             "eda_report":
-                result[
+                result.get(
                     "eda_report"
-                ],
+                ),
 
             "categorization_summary":
-                result[
+                result.get(
                     "categorization_summary"
-                ],
+                ),
 
             "theme_summary":
-                result[
+                result.get(
                     "theme_summary"
-                ],
+                ),
 
             "pain_point_summary":
-                result[
+                result.get(
                     "pain_point_summary"
-                ],
+                ),
 
             "feature_request_summary":
-                result[
+                result.get(
                     "feature_request_summary"
-                ],
+                ),
 
             "sentiment_summary":
-                result[
+                result.get(
                     "sentiment_summary"
-                ],
+                ),
 
             "trend_report":
-                result[
+                result.get(
                     "trend_report"
+                ),
+
+            # ---------------------------------------------
+            # MILESTONE 4
+            # ---------------------------------------------
+
+            "feature_scores":
+                milestone4_result[
+                    "feature_scores"
+                ],
+
+            "feature_prioritization":
+                milestone4_result[
+                    "prioritization"
+                ],
+
+            "roadmap":
+                milestone4_result[
+                    "roadmap"
+                ],
+
+            "milestone_recommendation":
+                milestone4_result[
+                    "milestone_recommendation"
+                ],
+
+            "executive_summary":
+                milestone4_result[
+                    "executive_summary"
+                ],
+
+            "product_strategy":
+                milestone4_result[
+                    "product_strategy"
+                ],
+
+            "evaluation":
+                milestone4_result[
+                    "evaluation"
                 ]
         }
 
+    except HTTPException:
+
+        raise
 
     except Exception as e:
 
-        print("\nUPLOAD ERROR:")
-        print(str(e))
+        print(
+            "\nUPLOAD / MILESTONE 4 ERROR:"
+        )
+
+        print(
+            str(e)
+        )
 
         raise HTTPException(
             status_code=500,
             detail=str(e)
         )
+
+    finally:
+
+        # =================================================
+        # DELETE TEMPORARY FILE
+        # =================================================
+
+        if (
+            temp_path
+            and os.path.exists(
+                temp_path
+            )
+        ):
+
+            try:
+
+                os.remove(
+                    temp_path
+                )
+
+            except Exception:
+
+                pass

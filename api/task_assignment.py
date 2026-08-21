@@ -7,65 +7,74 @@ from services.task_assignment_service import (
 from services import app_state
 
 
-# =====================================================
+# =========================================================
 # ROUTER
-# =====================================================
+# =========================================================
 
 router = APIRouter(
+
     prefix="/tasks",
+
     tags=["Task Assignment"]
 )
 
 
-# =====================================================
+# =========================================================
 # SERVICE
-# =====================================================
+# =========================================================
 
 task_service = TaskAssignmentService()
 
 
-# =====================================================
+# =========================================================
 # GENERATE TASKS
-# =====================================================
+# =========================================================
 
 @router.post("/generate")
 def generate_tasks():
 
-    # ==========================================
-    # STEP 1: CHECK USER STORIES
-    # ==========================================
+    # =====================================================
+    # CHECK USER STORIES
+    # =====================================================
 
     if not app_state.generated_user_stories:
 
         raise HTTPException(
+
             status_code=400,
-            detail="Please generate user stories first."
+
+            detail=(
+                "Please generate user stories first."
+            )
         )
 
 
-    # ==========================================
-    # STEP 2: GET USER STORIES
-    # ==========================================
+    # =====================================================
+    # GET USER STORIES
+    # =====================================================
 
     user_stories = (
         app_state.generated_user_stories
     )
 
 
-    # ==========================================
-    # STEP 3: GENERATE TASKS
-    # ==========================================
+    # =====================================================
+    # GENERATE WORK ITEMS
+    # =====================================================
 
     try:
 
-        result = task_service.generate_tasks(
-            user_stories=user_stories
+        result = (
+            task_service
+            .generate_tasks(
+                user_stories=user_stories
+            )
         )
 
 
-        # ==========================================
-        # STEP 4: SAVE GENERATED TASKS
-        # ==========================================
+        # =================================================
+        # STORE TASKS
+        # =================================================
 
         app_state.generated_tasks = (
             result.get(
@@ -75,16 +84,17 @@ def generate_tasks():
         )
 
 
-        # ==========================================
-        # STEP 5: RETURN RESPONSE
-        # ==========================================
+        # =================================================
+        # RETURN
+        # =================================================
 
         return {
 
-            "status": "success",
+            "status":
+                "success",
 
             "message":
-                "Development tasks generated successfully.",
+                "Development work items generated successfully.",
 
             "tasks":
                 app_state.generated_tasks

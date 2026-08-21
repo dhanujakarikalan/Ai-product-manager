@@ -12,32 +12,196 @@ class PRDGenerationService:
 
 
     # =====================================================
+    # AUTOMATIC PRODUCT AREA RECOMMENDATIONS
+    # =====================================================
+
+    def get_recommendations(self, df):
+
+        recommendations = []
+
+
+        # =================================================
+        # CATEGORY ANALYSIS
+        # =================================================
+
+        if "category" in df.columns:
+
+            category_counts = (
+                df["category"]
+                .dropna()
+                .value_counts()
+                .to_dict()
+            )
+
+            for category, count in category_counts.items():
+
+                recommendations.append({
+
+                    "area": str(category),
+
+                    "type": "Category",
+
+                    "signals": int(count)
+
+                })
+
+
+        # =================================================
+        # THEME ANALYSIS
+        # =================================================
+
+        if "theme" in df.columns:
+
+            theme_counts = (
+                df["theme"]
+                .dropna()
+                .value_counts()
+                .to_dict()
+            )
+
+            for theme, count in theme_counts.items():
+
+                recommendations.append({
+
+                    "area": str(theme),
+
+                    "type": "Theme",
+
+                    "signals": int(count)
+
+                })
+
+
+        # =================================================
+        # PAIN POINT ANALYSIS
+        # =================================================
+
+        if "pain_point" in df.columns:
+
+            pain_counts = (
+                df["pain_point"]
+                .dropna()
+                .value_counts()
+                .to_dict()
+            )
+
+            for pain, count in pain_counts.items():
+
+                recommendations.append({
+
+                    "area": str(pain),
+
+                    "type": "Pain Point",
+
+                    "signals": int(count)
+
+                })
+
+
+        # =================================================
+        # FEATURE REQUEST ANALYSIS
+        # =================================================
+
+        if "feature_request" in df.columns:
+
+            feature_counts = (
+                df["feature_request"]
+                .dropna()
+                .value_counts()
+                .to_dict()
+            )
+
+            for feature, count in feature_counts.items():
+
+                recommendations.append({
+
+                    "area": str(feature),
+
+                    "type": "Feature Request",
+
+                    "signals": int(count)
+
+                })
+
+
+        # =================================================
+        # SORT BY FREQUENCY
+        # =================================================
+
+        recommendations = sorted(
+
+            recommendations,
+
+            key=lambda x: x["signals"],
+
+            reverse=True
+
+        )
+
+
+        # =================================================
+        # REMOVE DUPLICATE AREAS
+        # =================================================
+
+        unique_recommendations = []
+
+        seen = set()
+
+
+        for item in recommendations:
+
+            area = item["area"].strip().lower()
+
+
+            if not area:
+
+                continue
+
+
+            if area not in seen:
+
+                seen.add(area)
+
+                unique_recommendations.append(item)
+
+
+        # =================================================
+        # TOP 5 RECOMMENDATIONS
+        # =================================================
+
+        return unique_recommendations[:5]
+
+
+    # =====================================================
     # GENERATE PRD
     # =====================================================
 
-    def generate_prd(
-        self,
-        df,
-        theme_summary=None
-    ):
+    def generate_prd(self, df):
+
 
         # =================================================
-        # 1. TOTAL FEEDBACK
+        # STEP 1: TOTAL FEEDBACK
         # =================================================
 
         total_feedback = len(df)
 
 
         # =================================================
-        # 2. INTERNAL CATEGORY ANALYSIS
+        # STEP 2: CATEGORY SUMMARY
         # =================================================
 
         if "category" in df.columns:
 
             category_summary = (
+
                 df["category"]
+
+                .dropna()
+
                 .value_counts()
+
                 .to_dict()
+
             )
 
         else:
@@ -46,15 +210,21 @@ class PRDGenerationService:
 
 
         # =================================================
-        # 3. INTERNAL SENTIMENT ANALYSIS
+        # STEP 3: SENTIMENT SUMMARY
         # =================================================
 
         if "sentiment" in df.columns:
 
             sentiment_summary = (
+
                 df["sentiment"]
+
+                .dropna()
+
                 .value_counts()
+
                 .to_dict()
+
             )
 
         else:
@@ -63,32 +233,44 @@ class PRDGenerationService:
 
 
         # =================================================
-        # 4. INTERNAL THEME ANALYSIS
+        # STEP 4: THEME SUMMARY
         # =================================================
 
         if "theme" in df.columns:
 
-            theme_summary_from_df = (
+            theme_summary = (
+
                 df["theme"]
+
+                .dropna()
+
                 .value_counts()
+
                 .to_dict()
+
             )
 
         else:
 
-            theme_summary_from_df = {}
+            theme_summary = {}
 
 
         # =================================================
-        # 5. INTERNAL PAIN POINT ANALYSIS
+        # STEP 5: PAIN POINT SUMMARY
         # =================================================
 
         if "pain_point" in df.columns:
 
             pain_point_summary = (
+
                 df["pain_point"]
+
+                .dropna()
+
                 .value_counts()
+
                 .to_dict()
+
             )
 
         else:
@@ -97,15 +279,21 @@ class PRDGenerationService:
 
 
         # =================================================
-        # 6. INTERNAL FEATURE REQUEST ANALYSIS
+        # STEP 6: FEATURE REQUEST SUMMARY
         # =================================================
 
         if "feature_request" in df.columns:
 
             feature_request_summary = (
+
                 df["feature_request"]
+
+                .dropna()
+
                 .value_counts()
+
                 .to_dict()
+
             )
 
         else:
@@ -114,25 +302,44 @@ class PRDGenerationService:
 
 
         # =================================================
-        # 7. PREPARE COMPLETE FEEDBACK
+        # STEP 7: AUTOMATIC RECOMMENDATIONS
+        # =================================================
+
+        recommendations = (
+
+            self.get_recommendations(df)
+
+        )
+
+
+        # =================================================
+        # STEP 8: PREPARE ALL FEEDBACK FOR RAG
         # =================================================
 
         feedback_list = []
+
 
         if "feedback" in df.columns:
 
             columns = ["feedback"]
 
 
-            for column in [
+            optional_columns = [
 
                 "category",
+
                 "theme",
+
                 "sentiment",
+
                 "pain_point",
+
                 "feature_request"
 
-            ]:
+            ]
+
+
+            for column in optional_columns:
 
                 if column in df.columns:
 
@@ -155,35 +362,25 @@ class PRDGenerationService:
 
 
         # =================================================
-        # 8. REBUILD RAG
-        # =================================================
-
-        if feedback_list:
-
-            self.rag.rebuild_vectorstore(
-                feedback_list
-            )
-
-
-        # =================================================
-        # 9. RAG QUERY
+        # STEP 9: RAG QUERY
         # =================================================
 
         query = """
 
-        Identify strong customer evidence
-        representing important recurring problems,
-        customer needs, product opportunities,
-        feature needs and customer experience issues.
+        Identify customer feedback that provides
+        strong evidence about the most important
+        product problems, recurring pain points,
+        customer needs, product improvement
+        opportunities and feature requirements.
 
-        Focus on feedback that can support
-        product requirements and product decisions.
+        Focus on evidence supporting the major
+        product areas identified from the dataset.
 
         """
 
 
         # =================================================
-        # 10. RETRIEVE SUPPORTING EVIDENCE
+        # STEP 10: RAG RETRIEVAL
         # =================================================
 
         relevant_feedback = (
@@ -200,197 +397,271 @@ class PRDGenerationService:
 
 
         # =================================================
-        # 11. CREATE CONTEXT
+        # STEP 11: CONVERT RETRIEVED DATA TO TEXT
         # =================================================
 
-        retrieved_context = "\n".join(
-
-            [
-
-                (
-                    f"- {item['feedback']} "
-                    f"(similarity: "
-                    f"{item['similarity_score']:.3f})"
-                )
-
-                for item in relevant_feedback
-
-            ]
-
-        )
+        retrieved_context_parts = []
 
 
-        if not retrieved_context:
+        for item in relevant_feedback:
 
-            retrieved_context = (
-                "No supporting customer "
-                "evidence was retrieved."
+            feedback_text = item.get(
+                "feedback",
+                ""
             )
 
 
-        # =================================================
-        # 12. FINAL THEMES
-        # =================================================
+            if feedback_text:
 
-        final_themes = (
+                retrieved_context_parts.append(
 
-            theme_summary
+                    f"- {feedback_text}"
 
-            if theme_summary
+                )
 
-            else theme_summary_from_df
+
+        retrieved_context = "\n".join(
+
+            retrieved_context_parts
 
         )
 
 
         # =================================================
-        # 13. INTERNAL ANALYSIS
-        # =================================================
-
-        analysis_context = f"""
-
-        TOTAL FEEDBACK:
-        {total_feedback}
-
-        CATEGORY SIGNALS:
-        {category_summary}
-
-        SENTIMENT SIGNALS:
-        {sentiment_summary}
-
-        THEME SIGNALS:
-        {final_themes}
-
-        PAIN POINT SIGNALS:
-        {pain_point_summary}
-
-        FEATURE REQUEST SIGNALS:
-        {feature_request_summary}
-
-        """
-
-
-        # =================================================
-        # 14. GEMINI PROMPT
+        # STEP 12: CREATE PRD PROMPT
         # =================================================
 
         prompt = f"""
 
 You are an AI Product Manager Copilot.
 
-Generate a professional Product Requirements
-Document based on the analyzed customer
-feedback dataset.
+Your task is to analyze the complete processed
+customer feedback dataset and create a professional
+Product Requirements Document (PRD) focused on
+customer insights, product problems, opportunities,
+requirements and success criteria.
 
-The dataset has already been cleaned
-and processed.
+The dataset has already been cleaned and processed.
 
-Use the following analytical information
-internally to make product decisions.
-
-Do NOT reproduce the analysis dashboards
-as separate sections in the final PRD.
-
-INTERNAL ANALYSIS:
-
-{analysis_context}
+Do not perform data cleaning.
 
 
-SUPPORTING CUSTOMER EVIDENCE:
+==================================================
+DATASET OVERVIEW
+==================================================
+
+Total Feedback:
+
+{total_feedback}
+
+
+==================================================
+CATEGORY SUMMARY
+==================================================
+
+{category_summary}
+
+
+==================================================
+SENTIMENT SUMMARY
+==================================================
+
+{sentiment_summary}
+
+
+==================================================
+THEME SUMMARY
+==================================================
+
+{theme_summary}
+
+
+==================================================
+PAIN POINT SUMMARY
+==================================================
+
+{pain_point_summary}
+
+
+==================================================
+FEATURE REQUEST SUMMARY
+==================================================
+
+{feature_request_summary}
+
+
+==================================================
+AUTOMATIC PRODUCT AREA RECOMMENDATIONS
+==================================================
+
+{recommendations}
+
+
+==================================================
+RAG RETRIEVED CUSTOMER EVIDENCE
+==================================================
 
 {retrieved_context}
 
 
-Use the complete dataset analysis to identify:
+==================================================
+PRD GENERATION INSTRUCTIONS
+==================================================
 
-- Important customer problems
-- Recurring customer needs
-- High-impact product opportunities
-- Product requirements
-- Business impact
-- Customer impact
-- Product priorities
-- Recommended solutions
+Generate a professional Product Requirements
+Document using the complete dataset analysis.
 
+The recommendations represent areas with strong
+signals in the processed dataset.
 
-Generate the PRD using these sections:
+Use the RAG retrieved feedback as supporting
+customer evidence.
 
-1. Executive Summary
+Do not treat the RAG results as the complete dataset.
 
-2. Problem Statement
-
-3. Customer Needs and Evidence
-
-4. Major Product Requirements
-
-5. Proposed Solution
-
-6. Target Users
-
-7. Functional Requirements
-
-8. Non-Functional Requirements
-
-9. User Experience Requirements
-
-10. Product Priorities
-
-11. Success Metrics
-
-12. Risks and Assumptions
-
-13. Future Enhancements
+The complete dataset summaries are the primary
+source for frequency and trend analysis.
 
 
-For Product Priorities, consider:
+==================================================
+GENERATE THE FOLLOWING PRD SECTIONS
+==================================================
 
-- Frequency
-- Customer impact
-- Business impact
-- Severity
-- Customer need
-- Supporting evidence
+1. Overall Customer Feedback Insights
+
+2. Customer Sentiment Overview
+
+3. Major Customer Problems
+
+4. Top Product Themes
+
+5. Feature Request Analysis
+
+6. Recommended Product Areas
+
+7. Product Opportunities
+
+8. Problem Statement
+
+9. Product Objective
+
+10. Proposed Solution
+
+11. Target Users
+
+12. Functional Requirements
+
+13. Non-Functional Requirements
+
+14. User Experience Considerations
+
+15. Success Metrics
+
+16. Risks and Assumptions
+
+17. Future Enhancements
 
 
-Use:
-
-P0 - Critical
-P1 - High
-P2 - Medium
-P3 - Low
-
+==================================================
+PRD SCOPE
+==================================================
 
 IMPORTANT:
 
+Do NOT generate an Executive Summary.
+
+The Executive Summary is generated separately
+as part of Milestone 4.
+
+Do NOT generate a Product Roadmap.
+
+Roadmap planning is handled by the existing
+Roadmap Planner module.
+
+Do NOT generate Milestone Recommendations.
+
+Milestone recommendations are handled by the
+Milestone 4 module.
+
+Do NOT generate a Product Strategy Report.
+
+Product Strategy is generated separately by
+the Milestone 4 module.
+
+Keep this PRD focused on:
+
+- Customer insights
+- Customer problems
+- Product themes
+- Feature requests
+- Product opportunities
+- Problem statements
+- Product objectives
+- Proposed solutions
+- Target users
+- Functional requirements
+- Non-functional requirements
+- UX considerations
+- Success metrics
+- Risks and assumptions
+- Future enhancements
+
+
+==================================================
+IMPORTANT RULES
+==================================================
+
 - Analyze the complete dataset.
-- RAG results are supporting evidence only.
-- Do not treat the retrieved feedback as the
-  entire dataset.
-- Do not invent customer feedback.
-- Do not create fake customer quotations.
-- Do not repeat category dashboards.
-- Do not repeat sentiment dashboards.
-- Do not repeat theme dashboards.
-- Do not repeat pain-point dashboards.
-- Do not repeat feature-request dashboards.
-- Focus on product decisions and requirements.
-- Clearly distinguish evidence from assumptions.
-- Write like a professional Product Manager.
+
+- Do not assume that only the retrieved RAG
+  feedback represents the dataset.
+
+- Use category, sentiment, themes, pain points
+  and feature requests to identify important
+  product problems.
+
+- Focus on recurring and high-impact problems.
+
+- Use retrieved feedback only as supporting
+  evidence.
+
+- Do not invent customer statements.
+
+- Do not create unsupported features.
+
+- Clearly separate evidence from assumptions.
+
+- Functional requirements must be specific
+  and actionable.
+
+- Functional requirements should later be
+  usable for User Story generation.
+
+- Write the document as a professional
+  Product Manager.
+
+- Use normal human-readable language.
+
+- Do NOT return JSON.
+
+- Do NOT return Python dictionaries.
 
 """
 
 
         # =================================================
-        # 15. GEMINI
+        # STEP 13: GEMINI
         # =================================================
 
         prd = self.llm.generate(
+
             prompt
+
         )
 
 
         # =================================================
-        # 16. RETURN
+        # STEP 14: RETURN RESULT
         # =================================================
 
         return {
@@ -407,13 +678,16 @@ IMPORTANT:
                 sentiment_summary,
 
             "theme_summary":
-                final_themes,
+                theme_summary,
 
             "pain_point_summary":
                 pain_point_summary,
 
             "feature_request_summary":
                 feature_request_summary,
+
+            "recommendations":
+                recommendations,
 
             "retrieved_feedback":
                 relevant_feedback,
@@ -423,4 +697,5 @@ IMPORTANT:
 
             "retrieved_context":
                 retrieved_context
+
         }

@@ -5,27 +5,59 @@ from fastapi import FastAPI
 # API ROUTERS
 # =========================================================
 
-from api.feedback import router as feedback_router
-from api.upload import router as upload_router
-from api.auth import router as auth_router
+from api.feedback import (
+    router as feedback_router
+)
 
-from api.analytics import router as analytics_router
-from api.dashboard import router as dashboard_router
+from api.upload import (
+    router as upload_router
+)
 
-from api.prd import router as prd_router
-from api.user_story import router as user_story_router
+from api.auth import (
+    router as auth_router
+)
 
-from api.task_assignment import router as task_assignment_router
+from api.analytics import (
+    router as analytics_router
+)
 
-from api.prioritization import router as prioritization_router
-from api.product_chat import router as product_chat_router
+from api.dashboard import (
+    router as dashboard_router
+)
+
+from api.prd import (
+    router as prd_router
+)
+
+from api.user_story import (
+    router as user_story_router
+)
+
+from api.prioritization import (
+    router as prioritization_router
+)
+
+from api.product_chat import (
+    router as product_chat_router
+)
+
+# =========================================================
+# MILESTONE 4
+# =========================================================
+
+from api.milestone4 import (
+    router as milestone4_router
+)
 
 
 # =========================================================
 # DATABASE
 # =========================================================
 
-from database.database import Base, engine
+from database.database import (
+    Base,
+    engine
+)
 
 
 # =========================================================
@@ -33,6 +65,7 @@ from database.database import Base, engine
 # =========================================================
 
 from models.user_model import User
+
 from models.feedback_db import Feedback
 
 
@@ -40,7 +73,9 @@ from models.feedback_db import Feedback
 # CREATE DATABASE TABLES
 # =========================================================
 
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(
+    bind=engine
+)
 
 
 # =========================================================
@@ -48,14 +83,17 @@ Base.metadata.create_all(bind=engine)
 # =========================================================
 
 app = FastAPI(
+
     title="AI Product Manager Copilot",
 
     description=(
         "AI-powered Product Management Copilot for "
-        "customer feedback analysis, PRD generation, "
-        "user story generation, task assignment, "
-        "feature prioritization, analytics, "
-        "dashboard insights, and product chat."
+        "customer feedback analysis, analytics, "
+        "RAG-based insights, PRD generation, "
+        "user story generation, feature prioritization, "
+        "roadmap planning, milestone recommendation, "
+        "executive summary, product strategy, "
+        "roadmap evaluation, and product chat."
     ),
 
     version="1.0.0"
@@ -67,18 +105,16 @@ app = FastAPI(
 # =========================================================
 
 app.include_router(
-    feedback_router,
-    tags=["Feedback"]
+    feedback_router
 )
 
 
 # =========================================================
-# FILE UPLOAD
+# UPLOAD
 # =========================================================
 
 app.include_router(
-    upload_router,
-    tags=["Upload"]
+    upload_router
 )
 
 
@@ -87,8 +123,7 @@ app.include_router(
 # =========================================================
 
 app.include_router(
-    auth_router,
-    tags=["Authentication"]
+    auth_router
 )
 
 
@@ -97,8 +132,7 @@ app.include_router(
 # =========================================================
 
 app.include_router(
-    analytics_router,
-    tags=["Analytics"]
+    analytics_router
 )
 
 
@@ -107,38 +141,25 @@ app.include_router(
 # =========================================================
 
 app.include_router(
-    dashboard_router,
-    tags=["Dashboard"]
+    dashboard_router
 )
 
 
 # =========================================================
-# PRD GENERATION
+# PRD
 # =========================================================
 
 app.include_router(
-    prd_router,
-    tags=["PRD Generation"]
+    prd_router
 )
 
 
 # =========================================================
-# USER STORY GENERATION
+# USER STORIES + WORK ITEMS
 # =========================================================
 
 app.include_router(
-    user_story_router,
-    tags=["User Story Generation"]
-)
-
-
-# =========================================================
-# TASK ASSIGNMENT
-# =========================================================
-
-app.include_router(
-    task_assignment_router,
-    tags=["Task Assignment"]
+    user_story_router
 )
 
 
@@ -147,8 +168,28 @@ app.include_router(
 # =========================================================
 
 app.include_router(
-    prioritization_router,
-    tags=["Feature Prioritization"]
+    prioritization_router
+)
+
+
+# =========================================================
+# MILESTONE 4
+#
+# Feature Prioritization
+#       ↓
+# Roadmap
+#       ↓
+# Milestone Recommendation
+#       ↓
+# Executive Summary
+#       ↓
+# Product Strategy
+#       ↓
+# Evaluation
+# =========================================================
+
+app.include_router(
+    milestone4_router
 )
 
 
@@ -157,8 +198,7 @@ app.include_router(
 # =========================================================
 
 app.include_router(
-    product_chat_router,
-    tags=["Product Chat"]
+    product_chat_router
 )
 
 
@@ -170,7 +210,13 @@ app.include_router(
 def home():
 
     return {
-        "message": "Welcome to AI Product Manager Copilot Backend",
-        "status": "running",
-        "version": "1.0.0"
+
+        "message":
+            "Welcome to AI Product Manager Copilot Backend",
+
+        "status":
+            "running",
+
+        "version":
+            "1.0.0"
     }

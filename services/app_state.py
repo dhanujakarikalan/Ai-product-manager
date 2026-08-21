@@ -1,9 +1,61 @@
 processed_df = None
 
-generated_prd = None
+pipeline_result = None
 
-generated_user_stories = None
+dataset_uploaded = False
 
-generated_tasks = None
+feedback_list = []
 
-product_chat_response = None
+
+# =========================================================
+# PRD
+# =========================================================
+
+generated_prd = ""
+
+generated_user_stories = ""
+
+generated_tasks = ""
+
+
+# =========================================================
+# FEATURE PRIORITIZATION
+# =========================================================
+
+feature_scores = []
+
+generated_prioritization = []
+
+
+# =========================================================
+# ROADMAP
+# =========================================================
+
+generated_roadmap = []
+
+
+# =========================================================
+# MILESTONE 4
+# =========================================================
+
+generated_milestone_recommendation = ""
+
+generated_executive_summary = ""
+
+generated_product_strategy = ""
+
+generated_roadmap_evaluation = ""
+
+
+# =========================================================
+# GLOBAL TESTING
+# =========================================================
+
+testing_report = {}
+
+
+# =========================================================
+# GLOBAL OPTIMIZATION
+# =========================================================
+
+optimization_context = {}
