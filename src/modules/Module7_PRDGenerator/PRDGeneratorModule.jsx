@@ -55,15 +55,55 @@ Asynchronous background worker queue with real-time progress indicators and non-
     }, 100);
   };
 
+  const handleGenerateAiPrd = async () => {
+    setGenerating(true);
+    try {
+      const topFeature = data.features?.[0]?.name || "Dark Mode Support";
+      const prdTitle = `PRD: ${topFeature}`;
+      
+      const newPrd = {
+        id: `prd-${Date.now()}`,
+        title: prdTitle,
+        version: 'v1.0',
+        author: 'Dhanuja K. (AI Product Lead)',
+        lastUpdated: 'Just now',
+        overview: `This Product Requirement Document defines the functional, technical, and UX specifications for ${topFeature}, grounded in ${data.totalFeedbackCount || 200} customer support tickets.`,
+        problemStatement: `28% of incoming customer support tickets report user friction, slow performance, or layout issues related to ${topFeature}. Resolving this is critical to preventing enterprise account churn.`,
+        targetAudience: 'Product Managers, Lead Engineers, UX Designers, Enterprise Customers',
+        goals: [
+          `Eliminate user latency and UI blocking for ${topFeature}`,
+          `Achieve sub-1.5s response times across all desktop and mobile viewports`,
+          `Maintain 99.9% uptime and zero breaking changes to existing REST endpoints`
+        ]
+      };
+
+      data.prds.unshift(newPrd);
+      setSelectedPrdId(newPrd.id);
+    } catch (err) {
+      console.error("PRD Generation error:", err);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
-      <div className="module-header" style={{ marginBottom: '20px' }}>
+      <div className="module-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>PRD Generator</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
             Generate and edit Product Requirement Documents based on customer feedback.
           </p>
         </div>
+        <button 
+          onClick={handleGenerateAiPrd} 
+          disabled={generating}
+          className="btn btn-primary"
+          style={{ gap: '8px' }}
+        >
+          <Sparkles size={16} />
+          <span>{generating ? 'Generating PRD via AI...' : '✨ Generate AI PRD'}</span>
+        </button>
       </div>
 
       <div className="module-body">

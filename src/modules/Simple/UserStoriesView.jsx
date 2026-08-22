@@ -134,18 +134,77 @@ export const UserStoriesView = () => {
     return matchesRole && matchesStatus && matchesSearch;
   });
 
+  const [generatingStories, setGeneratingStories] = useState(false);
+
+  const handleAutoGenerateStories = () => {
+    setGeneratingStories(true);
+    setTimeout(() => {
+      const topFeature = data.features?.[0]?.name || "Automated Report Export Engine";
+      const newGenerated = [
+        {
+          id: `us-ai-${Date.now()}-1`,
+          role: 'Enterprise Product Lead',
+          action: `export datasets exceeding 100,000 rows using ${topFeature}`,
+          benefit: 'my browser remains responsive and memory is protected from locking',
+          status: 'To Do',
+          priority: 'High',
+          feature: topFeature,
+          workStream: 'Development',
+          estimate: '5 pts',
+          acceptanceCriteria: [
+            { id: `ac-ai-1`, text: 'Given enterprise user clicks export on heavy dataset', done: true },
+            { id: `ac-ai-2`, text: 'When background worker processes ingestion stream', done: false },
+            { id: `ac-ai-3`, text: 'Then toast notification returns formatted download link', done: false }
+          ]
+        },
+        {
+          id: `us-ai-${Date.now()}-2`,
+          role: 'UX Designer',
+          action: 'toggle dark theme mode across all analytics cards',
+          benefit: 'visual contrast remains high and readable in dark environments',
+          status: 'To Do',
+          priority: 'Medium',
+          feature: 'Dark Mode Contrast',
+          workStream: 'Design',
+          estimate: '3 pts',
+          acceptanceCriteria: [
+            { id: `ac-ai-4`, text: 'Given designer opens high contrast theme toggle', done: true },
+            { id: `ac-ai-5`, text: 'When dark theme CSS variables load', done: false },
+            { id: `ac-ai-6`, text: 'Then text contrast ratio passes WCAG AAA standards', done: false }
+          ]
+        }
+      ];
+
+      setStories(prev => [...newGenerated, ...prev]);
+      setGeneratingStories(false);
+    }, 600);
+  };
+
   return (
-    <div className="animate-fade-in">
-      <div className="module-header">
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="module-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <span className="badge badge-primary" style={{ marginBottom: '8px' }}>Agile Requirements Studio</span>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>User Stories</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Agile User Stories & Acceptance Criteria</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-            Structured Agile user stories formatted as <em>"As a [Role], I want to [Action], so that [Benefit]"</em>.
+            Auto-generate user stories with Gherkin acceptance criteria (Given / When / Then).
           </p>
         </div>
+
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => setShowCreateModal(true)} className="btn btn-primary" style={{ gap: '6px' }}>
+          <button 
+            onClick={handleAutoGenerateStories} 
+            disabled={generatingStories}
+            className="btn btn-secondary"
+            style={{ gap: '8px' }}
+          >
+            <Sparkles size={16} color="var(--primary)" />
+            <span>{generatingStories ? 'Generating Stories...' : '✨ AI Auto-Generate Stories'}</span>
+          </button>
+          <button 
+            onClick={() => setShowCreateModal(true)} 
+            className="btn btn-primary"
+            style={{ gap: '8px' }}
+          >
             <Plus size={16} />
             <span>New User Story</span>
           </button>

@@ -351,12 +351,11 @@ export const initialMockData = {
     {
       sender: 'ai',
       time: '10:00 AM',
-      text: "👋 Hello Alex! I'm your **AI Product Manager Copilot**. I've analyzed **5 active feedback channels**, synced **3.8M analytics events today**, and identified **4 high-impact themes**. How can I assist with your product decisions today?",
+      text: "👋 Hello! I am your **AI Product Manager Assistant**. Ask me any question about your customer feedback dataset or product strategy and I will answer!",
       options: [
-        'Why did checkout conversion drop this week?',
-        'Summarize our top Enterprise feature blockers',
-        'Draft a PRD for the Slack Fraud Webhook request',
-        'Show me the highest RICE priority item right now'
+        'What are the biggest customer pain points?',
+        'Which features should we prioritize?',
+        'Create a PRD for the top feature'
       ]
     }
   ]

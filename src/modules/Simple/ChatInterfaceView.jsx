@@ -181,10 +181,21 @@ export const ChatInterfaceView = () => {
                 <div style={{ fontSize: '0.72rem', color: msg.sender === 'user' ? '#e0e7ff' : 'var(--text-dim)', marginBottom: '4px' }}>
                   {msg.sender === 'user' ? 'You' : 'Product Assistant'} • {msg.time}
                 </div>
-                <div style={{ fontSize: '0.9rem', lineHeight: 1.6, whitespace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: (msg.text || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                <div 
+                  style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }} 
+                  dangerouslySetInnerHTML={{ 
+                    __html: (msg.text || '')
+                      .replace(/## (.*?)\n/g, '<h3 style="font-size:1.1rem;margin:12px 0 6px;color:var(--primary);">$1</h3>')
+                      .replace(/### (.*?)\n/g, '<h4 style="font-size:0.95rem;margin:10px 0 4px;color:var(--text-main);">$1</h4>')
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\n\* /g, '<br/>• ')
+                      .replace(/\n- /g, '<br/>• ')
+                      .replace(/\n\n/g, '<br/><br/>')
+                  }} 
+                />
                 {msg.sender === 'ai' && (
                   <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid var(--border-color)', fontSize: '0.72rem', color: 'var(--primary)' }}>
-                    📎 Source Context: Grounded from {data.totalFeedbackCount || 142} ingested customer support tickets & analytics database.
+                    📎 Source Context: Grounded from {data.totalFeedbackCount || 200} ingested customer support tickets & analytics database.
                   </div>
                 )}
               </div>

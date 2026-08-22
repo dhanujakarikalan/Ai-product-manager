@@ -20,3 +20,5 @@ __pycache__/
 # Temporary Files
 *.tmp
 node_modules
+scratch/
+dist/
