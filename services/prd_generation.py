@@ -1,3 +1,7 @@
+# =========================================================
+# services/prd_generation.py
+# =========================================================
+
 from services.llm_service import LLMService
 from services.rag_service import RAGService
 
@@ -5,11 +9,8 @@ from services.rag_service import RAGService
 class PRDGenerationService:
 
     def __init__(self):
-
         self.llm = LLMService()
-
         self.rag = RAGService()
-
 
     # =====================================================
     # AUTOMATIC PRODUCT AREA RECOMMENDATIONS
@@ -19,158 +20,102 @@ class PRDGenerationService:
 
         recommendations = []
 
-
-        # =================================================
-        # CATEGORY ANALYSIS
-        # =================================================
-
+        # CATEGORY
         if "category" in df.columns:
-
-            category_counts = (
+            counts = (
                 df["category"]
                 .dropna()
+                .astype(str)
+                .str.strip()
                 .value_counts()
-                .to_dict()
             )
 
-            for category, count in category_counts.items():
+            for category, count in counts.items():
+                if category:
+                    recommendations.append({
+                        "area": category,
+                        "type": "Category",
+                        "signals": int(count)
+                    })
 
-                recommendations.append({
-
-                    "area": str(category),
-
-                    "type": "Category",
-
-                    "signals": int(count)
-
-                })
-
-
-        # =================================================
-        # THEME ANALYSIS
-        # =================================================
-
+        # THEME
         if "theme" in df.columns:
-
-            theme_counts = (
+            counts = (
                 df["theme"]
                 .dropna()
+                .astype(str)
+                .str.strip()
                 .value_counts()
-                .to_dict()
             )
 
-            for theme, count in theme_counts.items():
+            for theme, count in counts.items():
+                if theme:
+                    recommendations.append({
+                        "area": theme,
+                        "type": "Theme",
+                        "signals": int(count)
+                    })
 
-                recommendations.append({
-
-                    "area": str(theme),
-
-                    "type": "Theme",
-
-                    "signals": int(count)
-
-                })
-
-
-        # =================================================
-        # PAIN POINT ANALYSIS
-        # =================================================
-
+        # PAIN POINT
         if "pain_point" in df.columns:
-
-            pain_counts = (
+            counts = (
                 df["pain_point"]
                 .dropna()
+                .astype(str)
+                .str.strip()
                 .value_counts()
-                .to_dict()
             )
 
-            for pain, count in pain_counts.items():
+            for pain, count in counts.items():
+                if pain:
+                    recommendations.append({
+                        "area": pain,
+                        "type": "Pain Point",
+                        "signals": int(count)
+                    })
 
-                recommendations.append({
-
-                    "area": str(pain),
-
-                    "type": "Pain Point",
-
-                    "signals": int(count)
-
-                })
-
-
-        # =================================================
-        # FEATURE REQUEST ANALYSIS
-        # =================================================
-
+        # FEATURE REQUEST
         if "feature_request" in df.columns:
-
-            feature_counts = (
+            counts = (
                 df["feature_request"]
                 .dropna()
+                .astype(str)
+                .str.strip()
                 .value_counts()
-                .to_dict()
             )
 
-            for feature, count in feature_counts.items():
+            for feature, count in counts.items():
+                if feature:
+                    recommendations.append({
+                        "area": feature,
+                        "type": "Feature Request",
+                        "signals": int(count)
+                    })
 
-                recommendations.append({
-
-                    "area": str(feature),
-
-                    "type": "Feature Request",
-
-                    "signals": int(count)
-
-                })
-
-
-        # =================================================
-        # SORT BY FREQUENCY
-        # =================================================
-
-        recommendations = sorted(
-
-            recommendations,
-
+        # SORT
+        recommendations.sort(
             key=lambda x: x["signals"],
-
             reverse=True
-
         )
 
-
-        # =================================================
-        # REMOVE DUPLICATE AREAS
-        # =================================================
-
-        unique_recommendations = []
-
+        # REMOVE DUPLICATES
+        unique = []
         seen = set()
-
 
         for item in recommendations:
 
-            area = item["area"].strip().lower()
+            key = item["area"].strip().lower()
 
-
-            if not area:
-
+            if not key:
                 continue
 
+            if key in seen:
+                continue
 
-            if area not in seen:
+            seen.add(key)
+            unique.append(item)
 
-                seen.add(area)
-
-                unique_recommendations.append(item)
-
-
-        # =================================================
-        # TOP 5 RECOMMENDATIONS
-        # =================================================
-
-        return unique_recommendations[:5]
-
+        return unique[:5]
 
     # =====================================================
     # GENERATE PRD
@@ -178,230 +123,97 @@ class PRDGenerationService:
 
     def generate_prd(self, df):
 
-
-        # =================================================
-        # STEP 1: TOTAL FEEDBACK
-        # =================================================
-
         total_feedback = len(df)
 
-
-        # =================================================
-        # STEP 2: CATEGORY SUMMARY
-        # =================================================
-
+        # CATEGORY
         if "category" in df.columns:
-
             category_summary = (
-
                 df["category"]
-
                 .dropna()
-
+                .astype(str)
                 .value_counts()
-
                 .to_dict()
-
             )
-
         else:
-
             category_summary = {}
 
-
-        # =================================================
-        # STEP 3: SENTIMENT SUMMARY
-        # =================================================
-
+        # SENTIMENT
         if "sentiment" in df.columns:
-
             sentiment_summary = (
-
                 df["sentiment"]
-
                 .dropna()
-
+                .astype(str)
                 .value_counts()
-
                 .to_dict()
-
             )
-
         else:
-
             sentiment_summary = {}
 
-
-        # =================================================
-        # STEP 4: THEME SUMMARY
-        # =================================================
-
+        # THEME
         if "theme" in df.columns:
-
             theme_summary = (
-
                 df["theme"]
-
                 .dropna()
-
+                .astype(str)
                 .value_counts()
-
                 .to_dict()
-
             )
-
         else:
-
             theme_summary = {}
 
-
-        # =================================================
-        # STEP 5: PAIN POINT SUMMARY
-        # =================================================
-
+        # PAIN POINT
         if "pain_point" in df.columns:
-
             pain_point_summary = (
-
                 df["pain_point"]
-
                 .dropna()
-
+                .astype(str)
                 .value_counts()
-
                 .to_dict()
-
             )
-
         else:
-
             pain_point_summary = {}
 
-
-        # =================================================
-        # STEP 6: FEATURE REQUEST SUMMARY
-        # =================================================
-
+        # FEATURE REQUEST
         if "feature_request" in df.columns:
-
             feature_request_summary = (
-
                 df["feature_request"]
-
                 .dropna()
-
+                .astype(str)
                 .value_counts()
-
                 .to_dict()
-
             )
-
         else:
-
             feature_request_summary = {}
 
+        # RECOMMENDATIONS
+        recommendations = self.get_recommendations(df)
 
         # =================================================
-        # STEP 7: AUTOMATIC RECOMMENDATIONS
-        # =================================================
-
-        recommendations = (
-
-            self.get_recommendations(df)
-
-        )
-
-
-        # =================================================
-        # STEP 8: PREPARE ALL FEEDBACK FOR RAG
-        # =================================================
-
-        feedback_list = []
-
-
-        if "feedback" in df.columns:
-
-            columns = ["feedback"]
-
-
-            optional_columns = [
-
-                "category",
-
-                "theme",
-
-                "sentiment",
-
-                "pain_point",
-
-                "feature_request"
-
-            ]
-
-
-            for column in optional_columns:
-
-                if column in df.columns:
-
-                    columns.append(column)
-
-
-            feedback_list = (
-
-                df[columns]
-
-                .dropna(
-                    subset=["feedback"]
-                )
-
-                .to_dict(
-                    orient="records"
-                )
-
-            )
-
-
-        # =================================================
-        # STEP 9: RAG QUERY
+        # RAG CONTEXT
         # =================================================
 
         query = """
+        Identify customer feedback that provides strong
+        evidence about important product problems,
+        recurring pain points, customer needs,
+        product improvement opportunities and
+        feature requirements.
 
-        Identify customer feedback that provides
-        strong evidence about the most important
-        product problems, recurring pain points,
-        customer needs, product improvement
-        opportunities and feature requirements.
-
-        Focus on evidence supporting the major
-        product areas identified from the dataset.
-
+        Focus on recurring and high-impact customer
+        problems.
         """
 
-
-        # =================================================
-        # STEP 10: RAG RETRIEVAL
-        # =================================================
-
-        relevant_feedback = (
-
-            self.rag.retrieve_relevant_feedback(
-
-                query=query,
-
-                top_k=10
-
+        try:
+            relevant_feedback = (
+                self.rag.retrieve_relevant_feedback(
+                    query=query,
+                    top_k=10
+                )
             )
-
-        )
-
-
-        # =================================================
-        # STEP 11: CONVERT RETRIEVED DATA TO TEXT
-        # =================================================
+        except Exception:
+            relevant_feedback = []
 
         retrieved_context_parts = []
-
 
         for item in relevant_feedback:
 
@@ -410,50 +222,34 @@ class PRDGenerationService:
                 ""
             )
 
-
             if feedback_text:
-
                 retrieved_context_parts.append(
-
                     f"- {feedback_text}"
-
                 )
 
-
         retrieved_context = "\n".join(
-
             retrieved_context_parts
-
         )
 
-
         # =================================================
-        # STEP 12: CREATE PRD PROMPT
+        # PROMPT
         # =================================================
 
         prompt = f"""
+You are an experienced Senior Product Manager.
 
-You are an AI Product Manager Copilot.
-
-Your task is to analyze the complete processed
-customer feedback dataset and create a professional
-Product Requirements Document (PRD) focused on
-customer insights, product problems, opportunities,
-requirements and success criteria.
-
-The dataset has already been cleaned and processed.
+Create a professional, evidence-based Product
+Requirements Document from the processed customer
+feedback dataset.
 
 Do not perform data cleaning.
-
 
 ==================================================
 DATASET OVERVIEW
 ==================================================
 
 Total Feedback:
-
 {total_feedback}
-
 
 ==================================================
 CATEGORY SUMMARY
@@ -461,13 +257,11 @@ CATEGORY SUMMARY
 
 {category_summary}
 
-
 ==================================================
 SENTIMENT SUMMARY
 ==================================================
 
 {sentiment_summary}
-
 
 ==================================================
 THEME SUMMARY
@@ -475,13 +269,11 @@ THEME SUMMARY
 
 {theme_summary}
 
-
 ==================================================
 PAIN POINT SUMMARY
 ==================================================
 
 {pain_point_summary}
-
 
 ==================================================
 FEATURE REQUEST SUMMARY
@@ -489,43 +281,23 @@ FEATURE REQUEST SUMMARY
 
 {feature_request_summary}
 
-
 ==================================================
-AUTOMATIC PRODUCT AREA RECOMMENDATIONS
+RECOMMENDED PRODUCT AREAS
 ==================================================
 
 {recommendations}
 
-
 ==================================================
-RAG RETRIEVED CUSTOMER EVIDENCE
+CUSTOMER EVIDENCE
 ==================================================
 
 {retrieved_context}
 
-
 ==================================================
-PRD GENERATION INSTRUCTIONS
+PRD STRUCTURE
 ==================================================
 
-Generate a professional Product Requirements
-Document using the complete dataset analysis.
-
-The recommendations represent areas with strong
-signals in the processed dataset.
-
-Use the RAG retrieved feedback as supporting
-customer evidence.
-
-Do not treat the RAG results as the complete dataset.
-
-The complete dataset summaries are the primary
-source for frequency and trend analysis.
-
-
-==================================================
-GENERATE THE FOLLOWING PRD SECTIONS
-==================================================
+Generate the following sections:
 
 1. Overall Customer Feedback Insights
 
@@ -561,141 +333,64 @@ GENERATE THE FOLLOWING PRD SECTIONS
 
 17. Future Enhancements
 
-
 ==================================================
-PRD SCOPE
-==================================================
-
-IMPORTANT:
-
-Do NOT generate an Executive Summary.
-
-The Executive Summary is generated separately
-as part of Milestone 4.
-
-Do NOT generate a Product Roadmap.
-
-Roadmap planning is handled by the existing
-Roadmap Planner module.
-
-Do NOT generate Milestone Recommendations.
-
-Milestone recommendations are handled by the
-Milestone 4 module.
-
-Do NOT generate a Product Strategy Report.
-
-Product Strategy is generated separately by
-the Milestone 4 module.
-
-Keep this PRD focused on:
-
-- Customer insights
-- Customer problems
-- Product themes
-- Feature requests
-- Product opportunities
-- Problem statements
-- Product objectives
-- Proposed solutions
-- Target users
-- Functional requirements
-- Non-functional requirements
-- UX considerations
-- Success metrics
-- Risks and assumptions
-- Future enhancements
-
-
-==================================================
-IMPORTANT RULES
+IMPORTANT
 ==================================================
 
-- Analyze the complete dataset.
+Use the complete dataset summaries as the primary
+source for frequency and importance.
 
-- Do not assume that only the retrieved RAG
-  feedback represents the dataset.
+Use retrieved customer feedback only as supporting
+evidence.
 
-- Use category, sentiment, themes, pain points
-  and feature requests to identify important
-  product problems.
+Do not invent customer statements.
 
-- Focus on recurring and high-impact problems.
+Do not invent unsupported features.
 
-- Use retrieved feedback only as supporting
-  evidence.
+Clearly distinguish evidence from assumptions.
 
-- Do not invent customer statements.
+Functional requirements must be specific,
+actionable and suitable for downstream User Story
+generation.
 
-- Do not create unsupported features.
+Do not generate:
 
-- Clearly separate evidence from assumptions.
+- Executive Summary
+- Product Roadmap
+- Milestone Recommendations
+- Product Strategy Report
 
-- Functional requirements must be specific
-  and actionable.
+Those are generated by separate modules.
 
-- Functional requirements should later be
-  usable for User Story generation.
+Return professional human-readable Markdown.
 
-- Write the document as a professional
-  Product Manager.
+Do not return JSON.
 
-- Use normal human-readable language.
-
-- Do NOT return JSON.
-
-- Do NOT return Python dictionaries.
-
+Do not return Python dictionaries.
 """
 
+        # =================================================
+        # LLM
+        # =================================================
+
+        prd = self.llm.generate(prompt)
 
         # =================================================
-        # STEP 13: GEMINI
-        # =================================================
-
-        prd = self.llm.generate(
-
-            prompt
-
-        )
-
-
-        # =================================================
-        # STEP 14: RETURN RESULT
+        # RESULT
         # =================================================
 
         return {
-
             "prd": prd,
-
-            "total_feedback":
-                total_feedback,
-
-            "category_summary":
-                category_summary,
-
-            "sentiment_summary":
-                sentiment_summary,
-
-            "theme_summary":
-                theme_summary,
-
-            "pain_point_summary":
-                pain_point_summary,
-
-            "feature_request_summary":
-                feature_request_summary,
-
-            "recommendations":
-                recommendations,
-
-            "retrieved_feedback":
-                relevant_feedback,
-
-            "retrieved_feedback_count":
-                len(relevant_feedback),
-
-            "retrieved_context":
-                retrieved_context
-
+            "total_feedback": total_feedback,
+            "category_summary": category_summary,
+            "sentiment_summary": sentiment_summary,
+            "theme_summary": theme_summary,
+            "pain_point_summary": pain_point_summary,
+            "feature_request_summary": feature_request_summary,
+            "recommendations": recommendations,
+            "retrieved_feedback": relevant_feedback,
+            "retrieved_feedback_count": len(
+                relevant_feedback
+            ),
+            "retrieved_context": retrieved_context
         }

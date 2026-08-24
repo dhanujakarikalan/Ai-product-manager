@@ -1,20 +1,21 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+# =========================================================
+# api/upload.py
+# DATASET UPLOAD + COMPLETE ANALYSIS PIPELINE
+# =========================================================
 
-import tempfile
 import os
+import shutil
+import tempfile
+
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    HTTPException
+)
 
 from services.pipeline import FeedbackPipeline
-from services.rag_service import RAGService
-from services.milestone4_service import Milestone4Service
-
-import services.app_state as app_state
-
-# =========================================================
-# DATABASE
-# =========================================================
-
-from database.database import SessionLocal
-from models.feedback_db import Feedback
+from services import app_state
 
 
 # =========================================================
@@ -27,230 +28,14 @@ router = APIRouter(
 
 
 # =========================================================
-# SERVICES
+# PIPELINE
 # =========================================================
 
 pipeline = FeedbackPipeline()
 
-rag_service = RAGService()
-
-milestone4_service = Milestone4Service()
-
 
 # =========================================================
-# SAVE FEEDBACK TO POSTGRESQL
-# =========================================================
-
-def save_feedback_to_database(processed_df):
-
-    db = SessionLocal()
-
-    saved_count = 0
-
-    try:
-
-        # =================================================
-        # CHECK ACTUAL FEEDBACK COLUMN
-        # =================================================
-
-        if "feedback_text" not in processed_df.columns:
-
-            print(
-                "\nWARNING: 'feedback_text' column not found."
-            )
-
-            print(
-                "Available columns:",
-                processed_df.columns.tolist()
-            )
-
-            return 0
-
-        # =================================================
-        # SAVE EACH ROW
-        # =================================================
-
-        for _, row in processed_df.iterrows():
-
-            # -------------------------------------------------
-            # Actual feedback column from your dataset
-            # -------------------------------------------------
-
-            feedback_value = row.get(
-                "feedback_text"
-            )
-
-            if feedback_value is None:
-                continue
-
-            feedback_value = str(
-                feedback_value
-            ).strip()
-
-            if not feedback_value:
-                continue
-
-            # -------------------------------------------------
-            # Your dataset has "source", not "customer"
-            # So source is stored in the existing customer field
-            # -------------------------------------------------
-
-            customer_value = row.get(
-                "source"
-            )
-
-            if (
-                customer_value is None
-                or str(customer_value).strip() == ""
-            ):
-
-                customer_value = "Unknown"
-
-            # -------------------------------------------------
-            # Create Feedback record
-            # -------------------------------------------------
-
-            feedback_record = Feedback(
-                customer=str(
-                    customer_value
-                ),
-                feedback=feedback_value
-            )
-
-            db.add(
-                feedback_record
-            )
-
-            saved_count += 1
-
-        # =================================================
-        # COMMIT
-        # =================================================
-
-        db.commit()
-
-        print(
-            "\nPostgreSQL save successful."
-        )
-
-        print(
-            "Records saved:",
-            saved_count
-        )
-
-        return saved_count
-
-    except Exception as e:
-
-        db.rollback()
-
-        print(
-            "\nPOSTGRESQL ERROR:"
-        )
-
-        print(
-            str(e)
-        )
-
-        raise
-
-    finally:
-
-        db.close()
-
-
-# =========================================================
-# CREATE RAG FEEDBACK LIST
-# =========================================================
-
-def create_rag_feedback_list(processed_df):
-
-    feedback_list = []
-
-    # =====================================================
-    # CHECK ACTUAL DATASET COLUMN
-    # =====================================================
-
-    if "feedback_text" not in processed_df.columns:
-
-        print(
-            "\nWARNING: 'feedback_text' column not found "
-            "for RAG."
-        )
-
-        return feedback_list
-
-    # =====================================================
-    # CREATE RAG RECORDS
-    #
-    # RAGService expects:
-    #
-    # {
-    #     "feedback": "...",
-    #     "category": "...",
-    #     "theme": "...",
-    #     "sentiment": "...",
-    #     "pain_point": "...",
-    #     "feature_request": "..."
-    # }
-    # =====================================================
-
-    for _, row in processed_df.iterrows():
-
-        feedback_value = row.get(
-            "feedback_text"
-        )
-
-        if feedback_value is None:
-            continue
-
-        feedback_value = str(
-            feedback_value
-        ).strip()
-
-        if not feedback_value:
-            continue
-
-        feedback_item = {
-
-            "feedback":
-                feedback_value,
-
-            "category":
-                row.get(
-                    "category"
-                ),
-
-            "theme":
-                row.get(
-                    "theme"
-                ),
-
-            "sentiment":
-                row.get(
-                    "sentiment"
-                ),
-
-            "pain_point":
-                row.get(
-                    "pain_point"
-                ),
-
-            "feature_request":
-                row.get(
-                    "feature_request"
-                )
-        }
-
-        feedback_list.append(
-            feedback_item
-        )
-
-    return feedback_list
-
-
-# =========================================================
-# UPLOAD DATASET
+# UPLOAD ENDPOINT
 # =========================================================
 
 @router.post("/upload")
@@ -258,370 +43,541 @@ async def upload_file(
     file: UploadFile = File(...)
 ):
 
+    # =====================================================
+    # VALIDATE FILE
+    # =====================================================
+
+    if not file:
+
+        raise HTTPException(
+            status_code=400,
+            detail="No file uploaded."
+        )
+
+
+    filename = (
+        file.filename
+        or "uploaded_file"
+    )
+
+
+    extension = os.path.splitext(
+        filename
+    )[1].lower()
+
+
+    allowed_extensions = [
+        ".csv",
+        ".xlsx",
+        ".xls"
+    ]
+
+
+    if extension not in allowed_extensions:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported file type. "
+                "Please upload CSV or Excel file."
+            )
+        )
+
+
+    # =====================================================
+    # SAVE TEMPORARY FILE
+    # =====================================================
+
     temp_path = None
+
 
     try:
 
-        # =================================================
-        # 1. SAVE FILE TEMPORARILY
-        # =================================================
-
-        suffix = os.path.splitext(
-            file.filename
-        )[1]
-
         with tempfile.NamedTemporaryFile(
             delete=False,
-            suffix=suffix
+            suffix=extension
         ) as temp_file:
-
-            temp_file.write(
-                await file.read()
-            )
 
             temp_path = temp_file.name
 
-        print("\n" + "=" * 60)
+            shutil.copyfileobj(
+                file.file,
+                temp_file
+            )
+
 
         print(
-            "DATASET UPLOAD"
+            "\n========================================"
         )
 
         print(
-            "=" * 60
+            "DATASET UPLOAD STARTED"
         )
 
         print(
-            "File:",
-            file.filename
+            "Filename:",
+            filename
         )
+
+        print(
+            "========================================\n"
+        )
+
 
         # =================================================
-        # 2. RUN EXISTING FEEDBACK PIPELINE
+        # RUN COMPLETE PIPELINE
         # =================================================
-
-        print(
-            "\nRunning Feedback Pipeline..."
-        )
 
         result = pipeline.run(
             temp_path
         )
 
-        # =================================================
-        # 3. GET PROCESSED DATAFRAME
-        # =================================================
 
-        processed_df = result[
-            "processed_dataframe"
-        ]
+        if not result:
 
-        print(
-            "\nPROCESSED DATAFRAME COLUMNS:"
-        )
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Analysis pipeline returned "
+                    "an empty result."
+                )
+            )
 
-        print(
-            processed_df.columns.tolist()
-        )
-
-        print(
-            "\nTOTAL PROCESSED ROWS:"
-        )
-
-        print(
-            len(processed_df)
-        )
 
         # =================================================
-        # 4. STORE IN APPLICATION STATE
+        # GET PROCESSED DATAFRAME
+        # =================================================
+
+        processed_df = (
+            result.get(
+                "processed_dataframe"
+            )
+        )
+
+
+        if processed_df is None:
+
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Pipeline did not return "
+                    "a processed dataframe."
+                )
+            )
+
+
+        # =================================================
+        # SAVE GLOBAL APP STATE
         # =================================================
 
         app_state.processed_df = (
             processed_df
         )
 
+
         app_state.pipeline_result = (
             result
         )
+
 
         app_state.dataset_uploaded = (
             True
         )
 
+
+        # =================================================
+        # SAVE ORIGINAL FEEDBACK LIST
+        # =================================================
+
+        try:
+
+            app_state.feedback_list = (
+                processed_df
+                .to_dict(
+                    orient="records"
+                )
+            )
+
+        except Exception:
+
+            app_state.feedback_list = []
+
+
+        # =================================================
+        # CLEAR OLD GENERATED RESULTS
+        # =================================================
+        #
+        # New dataset = new analysis.
+        #
+        # Old PRD / stories should not remain
+        # attached to a completely different dataset.
+        #
+        # =================================================
+
+        app_state.generated_prd = ""
+
+        app_state.generated_prd_metadata = {}
+
+        app_state.generated_user_stories = []
+
+        app_state.generated_user_story_count = 0
+
+        app_state.generated_tasks = []
+
+
+        app_state.feature_scores = []
+
+        app_state.generated_prioritization = []
+
+        app_state.generated_roadmap = []
+
+        app_state.generated_milestone_recommendation = ""
+
+        app_state.generated_executive_summary = ""
+
+        app_state.generated_product_strategy = ""
+
+        app_state.generated_roadmap_evaluation = ""
+
+        app_state.testing_report = {}
+
+        app_state.optimization_context = {}
+
+
+        # =================================================
+        # EXTRACT SUMMARIES
+        # =================================================
+
+        theme_summary = (
+            result.get(
+                "theme_summary",
+                {}
+            )
+        )
+
+
+        category_summary = (
+            result.get(
+                "categorization_summary",
+                {}
+            )
+        )
+
+
+        sentiment_summary = (
+            result.get(
+                "sentiment_summary",
+                {}
+            )
+        )
+
+
+        pain_point_summary = (
+            result.get(
+                "pain_point_summary",
+                {}
+            )
+        )
+
+
+        feature_request_summary = (
+            result.get(
+                "feature_request_summary",
+                {}
+            )
+        )
+
+
+        trend_report = (
+            result.get(
+                "trend_report",
+                {}
+            )
+        )
+
+
+        # =================================================
+        # SENTIMENT COUNTS
+        # =================================================
+
+        positive = int(
+            sentiment_summary.get(
+                "Positive",
+                sentiment_summary.get(
+                    "positive",
+                    0
+                )
+            )
+            or 0
+        )
+
+
+        negative = int(
+            sentiment_summary.get(
+                "Negative",
+                sentiment_summary.get(
+                    "negative",
+                    0
+                )
+            )
+            or 0
+        )
+
+
+        neutral = int(
+            sentiment_summary.get(
+                "Neutral",
+                sentiment_summary.get(
+                    "neutral",
+                    0
+                )
+            )
+            or 0
+        )
+
+
+        # =================================================
+        # THEME INFORMATION
+        # =================================================
+
+        theme_distribution = (
+            theme_summary.get(
+                "theme_distribution",
+                {}
+            )
+            if isinstance(
+                theme_summary,
+                dict
+            )
+            else {}
+        )
+
+
+        # =================================================
+        # TREND INFORMATION
+        # =================================================
+
+        feedback_trend = (
+            trend_report.get(
+                "feedback_trend",
+                []
+            )
+            if isinstance(
+                trend_report,
+                dict
+            )
+            else []
+        )
+
+
+        monthly_feedback_trend = (
+            trend_report.get(
+                "monthly_feedback_trend",
+                []
+            )
+            if isinstance(
+                trend_report,
+                dict
+            )
+            else []
+        )
+
+
+        # =================================================
+        # RESPONSE
+        # =================================================
+
+        response = {
+
+            "status":
+                "success",
+
+            "message":
+                "File uploaded and analyzed successfully.",
+
+            "file_name":
+                filename,
+
+            "rows_processed":
+                int(
+                    len(processed_df)
+                ),
+
+            # ---------------------------------------------
+            # Main analysis summaries
+            # ---------------------------------------------
+
+            "categorization_summary":
+                category_summary,
+
+            "theme_summary":
+                theme_summary,
+
+            "pain_point_summary":
+                pain_point_summary,
+
+            "feature_request_summary":
+                feature_request_summary,
+
+            "sentiment_summary":
+                sentiment_summary,
+
+            # ---------------------------------------------
+            # Theme convenience data
+            # ---------------------------------------------
+
+            "theme_distribution":
+                theme_distribution,
+
+            "total_themes":
+                int(
+                    theme_summary.get(
+                        "total_themes",
+                        len(
+                            theme_distribution
+                        )
+                    )
+                    if isinstance(
+                        theme_summary,
+                        dict
+                    )
+                    else 0
+                ),
+
+            "top_theme":
+                (
+                    theme_summary.get(
+                        "top_theme"
+                    )
+                    if isinstance(
+                        theme_summary,
+                        dict
+                    )
+                    else None
+                ),
+
+            # ---------------------------------------------
+            # Trend data
+            # ---------------------------------------------
+
+            "trend_report":
+                trend_report,
+
+            "feedback_trend":
+                feedback_trend,
+
+            "monthly_feedback_trend":
+                monthly_feedback_trend,
+
+            # ---------------------------------------------
+            # Sentiment counts
+            # ---------------------------------------------
+
+            "positive_count":
+                positive,
+
+            "negative_count":
+                negative,
+
+            "neutral_count":
+                neutral
+
+        }
+
+
         print(
-            "\nRows:",
+            "\n========================================"
+        )
+
+        print(
+            "DATASET ANALYSIS COMPLETED"
+        )
+
+        print(
+            "Rows:",
             len(processed_df)
         )
 
         print(
-            "Columns:",
-            list(processed_df.columns)
-        )
-
-        # =================================================
-        # 5. SAVE FEEDBACK TO POSTGRESQL
-        # =================================================
-
-        print(
-            "\n" + "=" * 60
-        )
-
-        print(
-            "SAVING FEEDBACK TO POSTGRESQL"
-        )
-
-        print(
-            "=" * 60
-        )
-
-        database_records_saved = (
-            save_feedback_to_database(
-                processed_df
+            "Themes:",
+            len(
+                theme_distribution
             )
         )
 
         print(
-            "\nPostgreSQL storage completed."
-        )
-
-        # =================================================
-        # 6. CREATE RAG FEEDBACK LIST
-        # =================================================
-
-        feedback_list = (
-            create_rag_feedback_list(
-                processed_df
-            )
-        )
-
-        app_state.feedback_list = (
-            feedback_list
-        )
-
-        print(
-            "\nFeedback records for RAG:",
-            len(feedback_list)
-        )
-
-        # =================================================
-        # 7. CREATE FAISS VECTOR STORE
-        # =================================================
-
-        if feedback_list:
-
-            print(
-                "\nCreating FAISS Vector Store..."
-            )
-
-            rag_result = (
-                rag_service.create_vectorstore(
-                    feedback_list
-                )
-            )
-
-            print(
-                "FAISS Vector Store Created."
-            )
-
-            print(
-                "RAG result:",
-                rag_result
-            )
-
-        else:
-
-            print(
-                "\nNo feedback available for RAG."
-            )
-
-        # =================================================
-        # 8. RUN MILESTONE 4
-        # =================================================
-
-        print(
-            "\n" + "=" * 60
-        )
-
-        print(
-            "STARTING MILESTONE 4"
-        )
-
-        print(
-            "=" * 60
-        )
-
-        milestone4_result = (
-            milestone4_service.run(
-
-                processed_df=processed_df,
-
-                pipeline_result=result
+            "Trend records:",
+            len(
+                feedback_trend
             )
         )
 
         print(
-            "\nMilestone 4 Completed."
+            "========================================\n"
         )
 
-        # =================================================
-        # 9. RETURN COMPLETE RESULT
-        # =================================================
 
-        return {
+        return response
 
-            "status":
-                "Success",
 
-            "message":
-                (
-                    "Dataset uploaded, "
-                    "stored in PostgreSQL, "
-                    "RAG vector store created, "
-                    "and Milestone 4 completed successfully."
-                ),
-
-            "file_name":
-                file.filename,
-
-            "rows_processed":
-                len(processed_df),
-
-            "database_records_saved":
-                database_records_saved,
-
-            "rag_records":
-                len(feedback_list),
-
-            "dataset_available":
-                True,
-
-            # ---------------------------------------------
-            # PIPELINE RESULTS
-            # ---------------------------------------------
-
-            "validation_report":
-                result.get(
-                    "validation_report"
-                ),
-
-            "cleaning_report":
-                result.get(
-                    "cleaning_report"
-                ),
-
-            "eda_report":
-                result.get(
-                    "eda_report"
-                ),
-
-            "categorization_summary":
-                result.get(
-                    "categorization_summary"
-                ),
-
-            "theme_summary":
-                result.get(
-                    "theme_summary"
-                ),
-
-            "pain_point_summary":
-                result.get(
-                    "pain_point_summary"
-                ),
-
-            "feature_request_summary":
-                result.get(
-                    "feature_request_summary"
-                ),
-
-            "sentiment_summary":
-                result.get(
-                    "sentiment_summary"
-                ),
-
-            "trend_report":
-                result.get(
-                    "trend_report"
-                ),
-
-            # ---------------------------------------------
-            # MILESTONE 4
-            # ---------------------------------------------
-
-            "feature_scores":
-                milestone4_result[
-                    "feature_scores"
-                ],
-
-            "feature_prioritization":
-                milestone4_result[
-                    "prioritization"
-                ],
-
-            "roadmap":
-                milestone4_result[
-                    "roadmap"
-                ],
-
-            "milestone_recommendation":
-                milestone4_result[
-                    "milestone_recommendation"
-                ],
-
-            "executive_summary":
-                milestone4_result[
-                    "executive_summary"
-                ],
-
-            "product_strategy":
-                milestone4_result[
-                    "product_strategy"
-                ],
-
-            "evaluation":
-                milestone4_result[
-                    "evaluation"
-                ]
-        }
+    # =====================================================
+    # ERROR HANDLING
+    # =====================================================
 
     except HTTPException:
 
         raise
 
-    except Exception as e:
+
+    except Exception as error:
 
         print(
-            "\nUPLOAD / MILESTONE 4 ERROR:"
+            "\n========================================"
         )
 
         print(
-            str(e)
+            "UPLOAD / PIPELINE ERROR"
         )
+
+        print(
+            str(error)
+        )
+
+        print(
+            "========================================\n"
+        )
+
 
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=(
+                "Dataset processing failed: "
+                f"{str(error)}"
+            )
         )
+
 
     finally:
 
         # =================================================
-        # DELETE TEMPORARY FILE
+        # DELETE TEMP FILE
         # =================================================
 
-        if (
-            temp_path
-            and os.path.exists(
-                temp_path
-            )
-        ):
+        if temp_path:
 
             try:
 
-                os.remove(
+                if os.path.exists(
                     temp_path
+                ):
+
+                    os.remove(
+                        temp_path
+                    )
+
+            except Exception as cleanup_error:
+
+                print(
+                    "Temporary file cleanup failed:",
+                    cleanup_error
                 )
-
-            except Exception:
-
-                pass

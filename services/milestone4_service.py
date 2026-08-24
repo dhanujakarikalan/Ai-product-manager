@@ -1,8 +1,9 @@
 # =========================================================
 # services/milestone4_service.py
 # AI Product Manager Copilot
-# Complete Milestone 4 Service
 # =========================================================
+
+from collections import Counter
 
 from services.feature_prioritization import (
     FeaturePrioritization
@@ -39,36 +40,21 @@ class Milestone4Service:
 
     def __init__(self):
 
-        # =================================================
-        # INITIALIZE SERVICES
-        # =================================================
+        self.prioritizer = FeaturePrioritization()
 
-        self.prioritizer = (
-            FeaturePrioritization()
-        )
+        self.roadmap_planner = RoadmapPlanner()
 
-        self.roadmap_planner = (
-            RoadmapPlanner()
-        )
+        self.milestone_recommender = MilestoneRecommender()
 
-        self.milestone_recommender = (
-            MilestoneRecommender()
-        )
+        self.executive_summary = ExecutiveSummary()
 
-        self.executive_summary = (
-            ExecutiveSummary()
-        )
+        self.product_strategy = ProductStrategyReport()
 
-        self.product_strategy = (
-            ProductStrategyReport()
-        )
+        self.evaluation = RoadmapEvaluation()
 
-        self.evaluation = (
-            RoadmapEvaluation()
-        )
 
     # =====================================================
-    # 1. AUTOMATIC FEATURE EXTRACTION
+    # 1. EXTRACT FEATURES
     # =====================================================
 
     def extract_features(
@@ -86,8 +72,9 @@ class Milestone4Service:
             )
         )
 
+
         # -------------------------------------------------
-        # FEATURE REQUEST SUMMARY - DICTIONARY
+        # FEATURE DISTRIBUTION
         # -------------------------------------------------
 
         if isinstance(
@@ -95,195 +82,127 @@ class Milestone4Service:
             dict
         ):
 
-            for key, value in (
-                feature_request_summary.items()
+            distribution = (
+                feature_request_summary.get(
+                    "feature_request_distribution",
+                    {}
+                )
+            )
+
+            if isinstance(
+                distribution,
+                dict
             ):
 
-                # Example:
-                # {"Search Improvement": 25}
+                for feature in distribution.keys():
+
+                    feature = str(
+                        feature
+                    ).strip()
+
+                    if feature:
+                        feature_names.append(
+                            feature
+                        )
+
+
+            # -------------------------------------------------
+            # FALLBACK: features
+            # -------------------------------------------------
+
+            if not feature_names:
+
+                distribution = (
+                    feature_request_summary.get(
+                        "features",
+                        {}
+                    )
+                )
 
                 if isinstance(
-                    value,
-                    (int, float)
-                ):
-
-                    feature_names.append(
-                        str(key)
-                    )
-
-                # Example:
-                # {"feature": "Search Improvement"}
-
-                elif isinstance(
-                    value,
-                    str
-                ):
-
-                    feature_names.append(
-                        value
-                    )
-
-                # Example:
-                # {"features": [...]}
-
-                elif isinstance(
-                    value,
-                    list
-                ):
-
-                    for item in value:
-
-                        if isinstance(
-                            item,
-                            str
-                        ):
-
-                            feature_names.append(
-                                item
-                            )
-
-                        elif isinstance(
-                            item,
-                            dict
-                        ):
-
-                            feature = (
-
-                                item.get(
-                                    "feature"
-                                )
-
-                                or item.get(
-                                    "feature_name"
-                                )
-
-                                or item.get(
-                                    "name"
-                                )
-
-                                or item.get(
-                                    "request"
-                                )
-
-                                or item.get(
-                                    "feature_request"
-                                )
-
-                            )
-
-                            if feature:
-
-                                feature_names.append(
-                                    str(feature)
-                                )
-
-        # -------------------------------------------------
-        # FEATURE REQUEST SUMMARY - LIST
-        # -------------------------------------------------
-
-        elif isinstance(
-            feature_request_summary,
-            list
-        ):
-
-            for item in (
-                feature_request_summary
-            ):
-
-                if isinstance(
-                    item,
-                    str
-                ):
-
-                    feature_names.append(
-                        item
-                    )
-
-                elif isinstance(
-                    item,
+                    distribution,
                     dict
                 ):
 
-                    feature = (
+                    for feature in distribution.keys():
 
-                        item.get(
-                            "feature"
-                        )
+                        feature = str(
+                            feature
+                        ).strip()
 
-                        or item.get(
-                            "feature_name"
-                        )
+                        if feature:
+                            feature_names.append(
+                                feature
+                            )
 
-                        or item.get(
-                            "name"
-                        )
 
-                        or item.get(
-                            "request"
-                        )
+            # -------------------------------------------------
+            # FALLBACK: legacy dictionary
+            # -------------------------------------------------
 
-                        or item.get(
-                            "feature_request"
-                        )
+            if not feature_names:
 
-                    )
+                for key, value in (
+                    feature_request_summary.items()
+                ):
 
-                    if feature:
+                    if key in {
+                        "total_feature_requests",
+                        "unique_features",
+                        "most_requested_feature",
+                        "feature_request_distribution",
+                        "features"
+                    }:
+
+                        continue
+
+                    if isinstance(
+                        value,
+                        (int, float)
+                    ):
 
                         feature_names.append(
-                            str(feature)
+                            str(key)
                         )
+
 
         # -------------------------------------------------
         # FALLBACK TO DATAFRAME
         # -------------------------------------------------
 
-        if not feature_names:
+        if (
+            not feature_names
+            and processed_df is not None
+        ):
 
-            possible_columns = [
+            if (
+                "feature_request"
+                in processed_df.columns
+            ):
 
-                "feature",
+                values = (
 
-                "feature_name",
+                    processed_df[
+                        "feature_request"
+                    ]
 
-                "feature_request",
+                    .dropna()
 
-                "request"
+                    .astype(str)
 
-            ]
+                    .str.strip()
 
-            if processed_df is not None:
+                    .tolist()
 
-                for column in (
-                    possible_columns
-                ):
+                )
 
-                    if column in (
-                        processed_df.columns
-                    ):
+                feature_names.extend(
+                    values
+                )
 
-                        values = (
-
-                            processed_df[
-                                column
-                            ]
-
-                            .dropna()
-
-                            .astype(str)
-
-                            .tolist()
-
-                        )
-
-                        feature_names.extend(
-                            values
-                        )
-
-                        break
 
         # -------------------------------------------------
-        # CLEAN FEATURE NAMES
+        # CLEAN
         # -------------------------------------------------
 
         cleaned_features = []
@@ -295,42 +214,133 @@ class Milestone4Service:
             ).strip()
 
             if not feature:
-
                 continue
 
-            if feature.lower() in [
-
+            if feature.lower() in {
                 "nan",
-
                 "none",
-
                 "null"
-
-            ]:
-
+            }:
                 continue
 
-            if feature not in (
-                cleaned_features
-            ):
+            if feature not in cleaned_features:
 
                 cleaned_features.append(
                     feature
                 )
 
+
         return cleaned_features
 
+
     # =====================================================
-    # 2. AUTOMATIC FEATURE SCORE CREATION
+    # 2. GET FEATURE COUNTS
+    # =====================================================
+
+    def get_feature_counts(
+        self,
+        processed_df,
+        pipeline_result
+    ):
+
+        counts = {}
+
+
+        feature_summary = (
+            pipeline_result.get(
+                "feature_request_summary",
+                {}
+            )
+        )
+
+
+        # -------------------------------------------------
+        # BEST SOURCE
+        # -------------------------------------------------
+
+        if isinstance(
+            feature_summary,
+            dict
+        ):
+
+            distribution = (
+                feature_summary.get(
+                    "feature_request_distribution",
+                    {}
+                )
+            )
+
+            if isinstance(
+                distribution,
+                dict
+            ):
+
+                for feature, count in (
+                    distribution.items()
+                ):
+
+                    try:
+
+                        counts[
+                            str(feature)
+                        ] = int(count)
+
+                    except (
+                        TypeError,
+                        ValueError
+                    ):
+
+                        pass
+
+
+        # -------------------------------------------------
+        # DATAFRAME FALLBACK
+        # -------------------------------------------------
+
+        if (
+            not counts
+            and processed_df is not None
+            and "feature_request"
+            in processed_df.columns
+        ):
+
+            values = (
+
+                processed_df[
+                    "feature_request"
+                ]
+
+                .dropna()
+
+                .astype(str)
+
+                .str.strip()
+
+                .tolist()
+
+            )
+
+            counts = dict(
+                Counter(values)
+            )
+
+
+        return counts
+
+
+    # =====================================================
+    # 3. CREATE FEATURE SCORES
     # =====================================================
 
     def create_feature_scores(
         self,
         feature_names,
-        processed_df
+        processed_df,
+        pipeline_result
     ):
 
         feature_scores = []
+
 
         total_rows = (
 
@@ -342,93 +352,230 @@ class Milestone4Service:
 
         )
 
+
         # -------------------------------------------------
-        # CALCULATE NEGATIVE SENTIMENT RATIO
+        # FEATURE REQUEST COUNTS
         # -------------------------------------------------
 
-        negative_ratio = 0.0
+        feature_counts = (
+            self.get_feature_counts(
+                processed_df,
+                pipeline_result
+            )
+        )
+
+
+        max_count = max(
+            feature_counts.values(),
+            default=1
+        )
+
+
+        # -------------------------------------------------
+        # SENTIMENT INFORMATION
+        # -------------------------------------------------
+
+        sentiment_by_feature = {}
+
 
         if (
-
             processed_df is not None
-
+            and "feature_request"
+            in processed_df.columns
             and "sentiment"
             in processed_df.columns
-
-            and total_rows > 0
-
         ):
 
-            sentiment_values = (
+            for feature in feature_names:
 
-                processed_df[
-                    "sentiment"
-                ]
-
-                .astype(str)
-
-                .str.lower()
-
-            )
-
-            negative_count = (
-
-                sentiment_values
-
-                .str.contains(
-                    "negative",
-                    na=False
+                feature_rows = (
+                    processed_df[
+                        processed_df[
+                            "feature_request"
+                        ]
+                        .astype(str)
+                        .str.strip()
+                        == feature
+                    ]
                 )
 
-                .sum()
+
+                if len(feature_rows) == 0:
+
+                    sentiment_by_feature[
+                        feature
+                    ] = 0
+
+                    continue
+
+
+                negative_count = (
+
+                    feature_rows[
+                        "sentiment"
+                    ]
+
+                    .astype(str)
+
+                    .str.lower()
+
+                    .str.contains(
+                        "negative",
+                        na=False
+                    )
+
+                    .sum()
+
+                )
+
+
+                sentiment_by_feature[
+                    feature
+                ] = (
+
+                    negative_count
+                    / len(feature_rows)
+
+                )
+
+
+        # -------------------------------------------------
+        # CREATE SCORES
+        # -------------------------------------------------
+
+        for feature_name in feature_names:
+
+            request_count = (
+                feature_counts.get(
+                    feature_name,
+                    0
+                )
+            )
+
+
+            # -------------------------------------------------
+            # CUSTOMER DEMAND
+            #
+            # More requests = higher demand
+            # -------------------------------------------------
+
+            demand_ratio = (
+
+                request_count
+                / max_count
 
             )
 
-            negative_ratio = (
 
-                negative_count
-                / total_rows
-
-            )
-
-        # -------------------------------------------------
-        # CREATE FEATURE SCORES
-        # -------------------------------------------------
-
-        for feature_name in (
-            feature_names
-        ):
-
-            # -------------------------------------------------
-            # AUTOMATIC SCORING
-            # -------------------------------------------------
-
-            customer_demand = 7.0
-
-            business_value = 7.0
-
-            user_impact = max(
-
+            customer_demand = max(
                 1.0,
-
                 min(
                     10.0,
-                    negative_ratio * 10
+                    demand_ratio * 10
                 )
+            )
+
+
+            # -------------------------------------------------
+            # USER IMPACT
+            #
+            # Feature request frequency + negative feedback
+            # -------------------------------------------------
+
+            negative_ratio = (
+                sentiment_by_feature.get(
+                    feature_name,
+                    0
+                )
+            )
+
+
+            user_impact = (
+
+                demand_ratio * 7.0
+                + negative_ratio * 3.0
 
             )
+
+
+            user_impact = max(
+                1.0,
+                min(
+                    10.0,
+                    user_impact
+                )
+            )
+
+
+            # -------------------------------------------------
+            # BUSINESS VALUE
+            #
+            # Demand is used as a practical proxy.
+            # -------------------------------------------------
+
+            business_value = (
+
+                customer_demand * 0.7
+                + user_impact * 0.3
+
+            )
+
+
+            business_value = max(
+                1.0,
+                min(
+                    10.0,
+                    business_value
+                )
+            )
+
+
+            # -------------------------------------------------
+            # STRATEGIC ALIGNMENT
+            # -------------------------------------------------
 
             strategic_alignment = (
 
-                customer_demand
-                + business_value
+                customer_demand * 0.5
+                + business_value * 0.5
 
-            ) / 2
+            )
 
-            urgency = user_impact
+
+            strategic_alignment = max(
+                1.0,
+                min(
+                    10.0,
+                    strategic_alignment
+                )
+            )
+
 
             # -------------------------------------------------
-            # CREATE PYDANTIC FEATURE SCORE
+            # URGENCY
+            #
+            # High demand + negative feedback = urgent
+            # -------------------------------------------------
+
+            urgency = (
+
+                customer_demand * 0.6
+                + user_impact * 0.4
+
+            )
+
+
+            urgency = max(
+                1.0,
+                min(
+                    10.0,
+                    urgency
+                )
+            )
+
+
+            # -------------------------------------------------
+            # PYDANTIC MODEL
             # -------------------------------------------------
 
             feature_score = FeatureScore(
@@ -462,14 +609,17 @@ class Milestone4Service:
 
             )
 
+
             feature_scores.append(
                 feature_score
             )
 
+
         return feature_scores
 
+
     # =====================================================
-    # 3. COMPLETE MILESTONE 4 PIPELINE
+    # 4. RUN COMPLETE MILESTONE 4
     # =====================================================
 
     def run(
@@ -484,172 +634,141 @@ class Milestone4Service:
 
         feature_names = (
             self.extract_features(
-
                 processed_df,
-
                 pipeline_result
-
             )
         )
+
 
         if not feature_names:
 
             raise ValueError(
-
                 "No feature requests found "
                 "in the processed product data."
-
             )
 
+
         # =================================================
-        # STEP 2 - AUTOMATIC FEATURE SCORES
+        # STEP 2 - CREATE FEATURE SCORES
         # =================================================
 
         feature_scores = (
             self.create_feature_scores(
-
                 feature_names,
-
-                processed_df
-
+                processed_df,
+                pipeline_result
             )
         )
+
 
         app_state.feature_scores = (
             feature_scores
         )
 
+
         # =================================================
-        # STEP 3 - FEATURE PRIORITIZATION
+        # STEP 3 - PRIORITIZATION
         # =================================================
 
         prioritized_features = (
 
             self.prioritizer
             .prioritize_features(
-
                 features=feature_scores
-
             )
 
         )
+
 
         app_state.generated_prioritization = (
             prioritized_features
         )
 
+
         # =================================================
-        # STEP 4 - ROADMAP GENERATION
+        # STEP 4 - ROADMAP
         # =================================================
 
         roadmap = (
 
             self.roadmap_planner
             .create_roadmap(
-
                 prioritized_features
-
             )
 
         )
+
 
         app_state.generated_roadmap = (
             roadmap
         )
 
+
         # =================================================
-        # PIPELINE INFORMATION
+        # SUPPORTING DATA
         # =================================================
 
         pain_points = (
 
             pipeline_result.get(
-
                 "pain_point_summary",
-
                 {}
-
             )
 
         )
+
 
         feature_requests = (
 
             pipeline_result.get(
-
                 "feature_request_summary",
-
                 {}
-
             )
 
         )
+
 
         sentiment = (
 
             pipeline_result.get(
-
                 "sentiment_summary",
-
                 {}
-
             )
 
         )
+
 
         trends = (
 
             pipeline_result.get(
-
                 "trend_report",
-
                 {}
-
             )
 
         )
 
+
         # =================================================
         # STEP 5 - MILESTONE RECOMMENDATION
-        # =================================================
-        #
-        # MilestoneRecommender:
-        #
-        # recommend(self, roadmap)
-        #
         # =================================================
 
         recommendation = (
 
             self.milestone_recommender
             .recommend(
-
                 roadmap
-
             )
 
         )
+
 
         app_state.generated_milestone_recommendation = (
             recommendation
         )
 
+
         # =================================================
         # STEP 6 - EXECUTIVE SUMMARY
-        # =================================================
-        #
-        # ExecutiveSummary:
-        #
-        # generate(
-        #     roadmap,
-        #     milestone_recommendation,
-        #     pain_points,
-        #     feature_requests,
-        #     sentiment,
-        #     trends
-        # )
-        #
-        # Positional arguments are used intentionally.
         # =================================================
 
         executive_summary = (
@@ -673,9 +792,11 @@ class Milestone4Service:
 
         )
 
+
         app_state.generated_executive_summary = (
             executive_summary
         )
+
 
         # =================================================
         # STEP 7 - PRODUCT STRATEGY
@@ -704,9 +825,11 @@ class Milestone4Service:
 
         )
 
+
         app_state.generated_product_strategy = (
             product_strategy
         )
+
 
         # =================================================
         # STEP 8 - EVALUATION
@@ -729,15 +852,17 @@ class Milestone4Service:
 
         )
 
+
         app_state.generated_roadmap_evaluation = (
             evaluation
         )
 
+
         # =================================================
-        # STEP 9 - FINAL RESULT
+        # FINAL RESULT
         # =================================================
 
-        result = {
+        return {
 
             "feature_scores":
                 feature_scores,
@@ -761,5 +886,3 @@ class Milestone4Service:
                 evaluation
 
         }
-
-        return result

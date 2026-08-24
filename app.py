@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # =========================================================
@@ -41,10 +42,6 @@ from api.product_chat import (
     router as product_chat_router
 )
 
-# =========================================================
-# MILESTONE 4
-# =========================================================
-
 from api.milestone4 import (
     router as milestone4_router
 )
@@ -65,7 +62,6 @@ from database.database import (
 # =========================================================
 
 from models.user_model import User
-
 from models.feedback_db import Feedback
 
 
@@ -97,6 +93,54 @@ app = FastAPI(
     ),
 
     version="1.0.0"
+)
+
+
+# =========================================================
+# CORS
+# =========================================================
+#
+# Frontend:
+#   http://localhost:5173
+#   http://127.0.0.1:5173
+#
+# Backend:
+#   http://127.0.0.1:8001
+#
+# Without CORS, the browser blocks API requests even
+# though the backend itself is running correctly.
+# =========================================================
+
+app.add_middleware(
+
+    CORSMiddleware,
+
+    allow_origins=[
+
+        "http://localhost:5173",
+
+        "http://127.0.0.1:5173",
+
+        "http://localhost:5174",
+
+        "http://127.0.0.1:5174"
+
+    ],
+
+    allow_credentials=True,
+
+    allow_methods=[
+
+        "*"
+
+    ],
+
+    allow_headers=[
+
+        "*"
+
+    ]
+
 )
 
 
@@ -219,4 +263,5 @@ def home():
 
         "version":
             "1.0.0"
+
     }
