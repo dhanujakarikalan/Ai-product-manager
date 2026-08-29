@@ -39,9 +39,41 @@ class SentimentAnalysis:
                 "processed_feedback column not found."
             )
 
-        df["sentiment"] = df["processed_feedback"].apply(
-            self.analyze_sentiment
-        )
+        existing_sentiment = None
+
+        for column in (
+            "sentiment",
+            "sentiment_label",
+            "sentiment analysis"
+        ):
+
+            if column in df.columns:
+                existing_sentiment = (
+                    df[column]
+                    .fillna("")
+                    .astype(str)
+                    .str.strip()
+                    .str.lower()
+                    .map({
+                        "positive": "Positive",
+                        "positive feedback": "Positive",
+                        "pos": "Positive",
+                        "negative": "Negative",
+                        "negative feedback": "Negative",
+                        "neg": "Negative",
+                        "neutral": "Neutral",
+                        "neutral feedback": "Neutral",
+                        "neu": "Neutral"
+                    })
+                )
+                break
+
+        if existing_sentiment is not None and existing_sentiment.notna().all():
+            df["sentiment"] = existing_sentiment
+        else:
+            df["sentiment"] = df["processed_feedback"].apply(
+                self.analyze_sentiment
+            )
 
         sentiment_counts = (
             df["sentiment"]
