@@ -8,6 +8,7 @@ import { LandingPage } from './components/auth/LandingPage';
 // Import clean simplified views & essential modules:
 import { DashboardView } from './modules/Simple/DashboardView';
 import { DataUploadView } from './modules/Simple/DataUploadView';
+import { AnalyticsIntegrationModule } from './modules/Module3_Analytics/AnalyticsIntegrationModule';
 import { ThemeExtractionModule } from './modules/Module4_ThemeExtraction/ThemeExtractionModule';
 import { UserStoriesView } from './modules/Simple/UserStoriesView';
 import { PRDGeneratorModule } from './modules/Module7_PRDGenerator/PRDGeneratorModule';
@@ -23,6 +24,8 @@ const ModuleRouter = () => {
     case 'upload':
     case 'feedback':
       return <DataUploadView />;
+    case 'analytics':
+      return <AnalyticsIntegrationModule />;
     case 'theme':
     case 'themes':
     case 'insights':

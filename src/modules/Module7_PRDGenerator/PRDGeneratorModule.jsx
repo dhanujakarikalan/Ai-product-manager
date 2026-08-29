@@ -12,6 +12,38 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 
+const renderStructuredMarkdown = (content) => {
+  return String(content || '').replace(/\*/g, '').split('\n').map((line, index) => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      return <div key={index} style={{ height: '10px' }} />;
+    }
+
+    if (trimmed.startsWith('# ')) {
+      return <h2 key={index} style={{ margin: '18px 0 8px', fontSize: '1.35rem' }}>{trimmed.slice(2)}</h2>;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      return <h3 key={index} style={{ margin: '20px 0 8px', color: 'var(--primary)', fontSize: '1rem' }}>{trimmed.slice(3)}</h3>;
+    }
+
+    if (trimmed.startsWith('### ')) {
+      return <h4 key={index} style={{ margin: '14px 0 6px' }}>{trimmed.slice(4)}</h4>;
+    }
+
+    if (/^[-*]\s/.test(trimmed)) {
+      return <li key={index} style={{ marginBottom: '6px', marginLeft: '20px' }}>{trimmed.slice(2)}</li>;
+    }
+
+    if (/^\d+\.\s/.test(trimmed)) {
+      return <li key={index} style={{ marginBottom: '6px', marginLeft: '20px' }}>{trimmed.replace(/^\d+\.\s/, '')}</li>;
+    }
+
+    return <p key={index} style={{ margin: '0 0 10px', lineHeight: 1.65 }}>{trimmed}</p>;
+  });
+};
+
 export const PRDGeneratorModule = () => {
 
   const {
@@ -26,6 +58,7 @@ export const PRDGeneratorModule = () => {
   const [error, setError] = useState('');
   const [generatedPrd, setGeneratedPrd] = useState(null);
   const [markdown, setMarkdown] = useState('');
+  const [selectedFeature, setSelectedFeature] = useState('');
 
   // =========================================================
   // CHECK WHETHER REAL DATA EXISTS
@@ -90,16 +123,16 @@ export const PRDGeneratorModule = () => {
     }
 
     if (prd.version) {
-      sections.push(`**Version:** ${prd.version}`);
+      sections.push(`Version: ${prd.version}`);
     }
 
     if (prd.author) {
-      sections.push(`**Author:** ${prd.author}`);
+      sections.push(`Author: ${prd.author}`);
     }
 
     if (prd.lastUpdated) {
       sections.push(
-        `**Last Updated:** ${prd.lastUpdated}`
+        `Last Updated: ${prd.lastUpdated}`
       );
     }
 
@@ -192,7 +225,7 @@ export const PRDGeneratorModule = () => {
     try {
 
       const response =
-        await api.generatePrd();
+        await api.generatePrd(selectedFeature);
 
 
       if (!response) {
@@ -827,6 +860,27 @@ export const PRDGeneratorModule = () => {
 
       </div>
 
+      <div className="glass-panel" style={{ padding: '14px 20px', marginBottom: '20px' }}>
+        <label htmlFor="prd-feature" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+          PRD Scope
+        </label>
+        <select
+          id="prd-feature"
+          className="input-field"
+          value={selectedFeature}
+          onChange={event => setSelectedFeature(event.target.value)}
+          disabled={generating}
+          style={{ width: '100%', maxWidth: '520px' }}
+        >
+          <option value="">All analyzed feedback</option>
+          {(data?.features || []).map(feature => (
+            <option key={feature.id || feature.title} value={feature.title || feature.name}>
+              {feature.title || feature.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
 
       {/* ERROR */}
 
@@ -1148,7 +1202,7 @@ export const PRDGeneratorModule = () => {
                 margin: 0
               }}
             >
-              {generatedPrd}
+              {renderStructuredMarkdown(generatedPrd)}
             </pre>
 
           ) : (
@@ -1237,7 +1291,7 @@ export const PRDGeneratorModule = () => {
                     margin: 0
                   }}
                 >
-                  {generatedPrd.content}
+                  {renderStructuredMarkdown(generatedPrd.content)}
                 </pre>
 
               ) : (

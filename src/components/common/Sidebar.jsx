@@ -24,6 +24,7 @@ export const Sidebar = () => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, requiredPermission: null },
     { id: 'upload', label: 'Feedback Workspace', icon: Inbox, requiredPermission: null },
     { id: 'themes', label: 'Product Insights', icon: BarChart3, requiredPermission: null },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, requiredPermission: null },
     { id: 'prd', label: 'PRD Generator', icon: FileText, requiredPermission: null },
     { id: 'stories', label: 'User Stories', icon: BookOpen, requiredPermission: null },
     { id: 'prioritization', label: 'Feature Prioritization', icon: Sliders, requiredPermission: null },

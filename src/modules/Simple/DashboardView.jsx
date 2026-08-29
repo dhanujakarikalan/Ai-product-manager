@@ -91,7 +91,10 @@ const normalizeDistribution = (value) => {
 
   const nestedKeys = [
     'distribution',
+    'category_distribution',
+    'categorization_distribution',
     'theme_distribution',
+    'sentiment_distribution',
     'category_distribution',
     'feature_distribution',
     'feature_request_distribution',

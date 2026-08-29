@@ -9,6 +9,7 @@ import React, {
 import { initialMockData } from '../data/mockDatabase';
 import { api } from '../services/api';
 
+
 const AppContext = createContext();
 
 
@@ -248,6 +249,12 @@ export const AppProvider = ({
           await api.getDashboardData();
 
 
+        console.log(
+          'FULL DASHBOARD RESPONSE:',
+          response
+        );
+
+
         if (!response) {
 
           setApiConnected(false);
@@ -257,49 +264,110 @@ export const AppProvider = ({
         }
 
 
+        // =================================================
+        // HANDLE DIFFERENT BACKEND RESPONSE STRUCTURES
+        // =================================================
+
         const dashboard =
           response.dashboard ||
+          response.data ||
           response;
 
+
+        console.log(
+          'DASHBOARD DATA:',
+          dashboard
+        );
+
+
+        // =================================================
+        // TOTAL FEEDBACK
+        // =================================================
 
         const totalFeedback =
           Number(
             dashboard.totalFeedback ??
+            dashboard.total_feedback ??
+            dashboard.rows_processed ??
             dashboard['Total Feedback'] ??
+            response.totalFeedback ??
+            response.total_feedback ??
+            response.rows_processed ??
             0
           );
 
 
+        // =================================================
+        // SENTIMENT SUMMARY
+        // =================================================
+
+        const sentimentSummary =
+          dashboard.sentiment_summary ||
+          dashboard.sentimentSummary ||
+          dashboard.sentiment ||
+          dashboard.Sentiment ||
+          response.sentiment_summary ||
+          response.sentimentSummary ||
+          response.sentiment ||
+          response.Sentiment ||
+          {};
+
+
         const positive =
           Number(
+            sentimentSummary.Positive ??
+            sentimentSummary.positive ??
             dashboard.positive ??
             dashboard['Positive Feedback'] ??
+            response.positive ??
+            response['Positive Feedback'] ??
             0
           );
 
 
         const negative =
           Number(
+            sentimentSummary.Negative ??
+            sentimentSummary.negative ??
             dashboard.negative ??
             dashboard['Negative Feedback'] ??
+            response.negative ??
+            response['Negative Feedback'] ??
             0
           );
 
 
         const neutral =
           Number(
+            sentimentSummary.Neutral ??
+            sentimentSummary.neutral ??
             dashboard.neutral ??
             dashboard['Neutral Feedback'] ??
+            response.neutral ??
+            response['Neutral Feedback'] ??
             0
           );
 
 
-        setApiConnected(true);
+        console.log(
+          'SENTIMENT:',
+          {
+            positive,
+            negative,
+            neutral
+          }
+        );
 
+
+        // =================================================
+        // IF NO DATA EXISTS
+        // =================================================
 
         if (totalFeedback <= 0) {
 
           clearAnalysisData();
+
+          setApiConnected(true);
 
           return dashboard;
 
@@ -307,7 +375,125 @@ export const AppProvider = ({
 
 
         // =================================================
-        // SENTIMENT
+        // CATEGORIES
+        // =================================================
+
+        const categories =
+          dashboard.Categories ||
+          dashboard.categories ||
+          dashboard.categorization_summary ||
+          dashboard.category_summary ||
+          response.Categories ||
+          response.categories ||
+          response.categorization_summary ||
+          response.category_summary ||
+          {};
+
+
+        // =================================================
+        // THEMES
+        // =================================================
+
+        const themes =
+          dashboard.Themes ||
+          dashboard.themes ||
+          dashboard.theme_summary ||
+          response.Themes ||
+          response.themes ||
+          response.theme_summary ||
+          {};
+
+
+        // =================================================
+        // PAIN POINTS
+        // =================================================
+
+        const painPoints =
+          dashboard['Pain Points'] ||
+          dashboard.painPoints ||
+          dashboard.pain_points ||
+          dashboard.pain_point_summary ||
+          response['Pain Points'] ||
+          response.painPoints ||
+          response.pain_points ||
+          response.pain_point_summary ||
+          null;
+
+
+        // =================================================
+        // FEATURE REQUESTS
+        // =================================================
+
+        const featureRequests =
+          dashboard['Feature Requests'] ||
+          dashboard.featureRequests ||
+          dashboard.feature_requests ||
+          dashboard.feature_request_summary ||
+          response['Feature Requests'] ||
+          response.featureRequests ||
+          response.feature_requests ||
+          response.feature_request_summary ||
+          null;
+
+
+        // =================================================
+        // FEATURE SCORES
+        // =================================================
+
+        const featureScores =
+          Array.isArray(
+            response.feature_scores
+          )
+            ? response.feature_scores
+            : Array.isArray(
+                dashboard.feature_scores
+              )
+                ? dashboard.feature_scores
+                : [];
+
+
+        // =================================================
+        // FEATURE PRIORITIZATION
+        // =================================================
+
+        const prioritization =
+          Array.isArray(
+            response.feature_prioritization
+          )
+            ? response.feature_prioritization
+            : Array.isArray(
+                response.prioritization
+              )
+                ? response.prioritization
+                : Array.isArray(
+                    dashboard.feature_prioritization
+                  )
+                    ? dashboard.feature_prioritization
+                    : Array.isArray(
+                        dashboard.prioritization
+                      )
+                        ? dashboard.prioritization
+                        : [];
+
+
+        // =================================================
+        // ROADMAP
+        // =================================================
+
+        const roadmap =
+          Array.isArray(
+            response.roadmap
+          )
+            ? response.roadmap
+            : Array.isArray(
+                dashboard.roadmap
+              )
+                ? dashboard.roadmap
+                : [];
+
+
+        // =================================================
+        // SENTIMENT CHART
         // =================================================
 
         const sentiment = [];
@@ -347,27 +533,23 @@ export const AppProvider = ({
 
 
         // =================================================
-        // CATEGORIES
+        // THEME DISTRIBUTION
         // =================================================
 
-        const categories =
-          dashboard.Categories ||
-          dashboard.categories ||
-          {};
-
-
-        const themes =
-          dashboard.Themes ||
-          dashboard.themes ||
-          {};
-
-
         const categoryEntries =
-          Object.entries(categories);
+          categories &&
+          typeof categories === 'object' &&
+          !Array.isArray(categories)
+            ? Object.entries(categories)
+            : [];
 
 
         const themeEntries =
-          Object.entries(themes);
+          themes &&
+          typeof themes === 'object' &&
+          !Array.isArray(themes)
+            ? Object.entries(themes)
+            : [];
 
 
         const distributionSource =
@@ -376,34 +558,59 @@ export const AppProvider = ({
             : themeEntries;
 
 
+        // =================================================
+        // TREND DATA
+        // =================================================
+
+        const trends =
+          dashboard.feedbackTrend ||
+          dashboard.feedback_trend ||
+          dashboard['Feedback Trend'] ||
+          dashboard.trend_report ||
+          response.feedbackTrend ||
+          response.feedback_trend ||
+          response.trend_report ||
+          [];
+
+
+        // =================================================
+        // UPDATE CHART DATA
+        // =================================================
+
         setChartData({
 
           themeDistribution:
+
             distributionSource.map(
               ([name, value]) => ({
+
                 name,
+
                 tickets:
                   Number(value) || 0
+
               })
             ),
 
           sentiment,
 
-          trends:
-            dashboard.feedbackTrend ||
-            dashboard['Feedback Trend'] ||
-            []
+          trends
 
         });
 
 
         // =================================================
-        // PRESERVE MILESTONE 4
+        // UPDATE APPLICATION DATA
         // =================================================
 
         setData(prev => ({
 
           ...prev,
+
+
+          // ===============================================
+          // BASIC DATA
+          // ===============================================
 
           totalFeedbackCount:
             totalFeedback,
@@ -418,81 +625,82 @@ export const AppProvider = ({
             neutral,
 
           datasetUploaded:
-            true,
+            totalFeedback > 0,
+
+
+          // ===============================================
+          // BACKEND DATA
+          // ===============================================
 
           backendMetrics:
             dashboard,
 
           backendThemeSummary:
-            dashboard.Themes ||
-            dashboard.themes ||
-            null,
+            themes,
 
-          backendPainPoints:
-            dashboard['Pain Points'] ||
-            dashboard.painPoints ||
-            null,
-
-          backendFeatureRequests:
-            dashboard['Feature Requests'] ||
-            dashboard.featureRequests ||
-            null,
+          backendSentimentSummary:
+            sentimentSummary,
 
           backendCategorizationSummary:
-            dashboard.Categories ||
-            dashboard.categories ||
-            null,
+            categories,
+
+          backendPainPoints:
+            painPoints,
+
+          backendFeatureRequests:
+            featureRequests,
+
+          trendReport:
+            trends,
 
 
-          // =================================================
+          // ===============================================
           // MILESTONE 4
-          // =================================================
+          // ===============================================
 
           backendFeatureScores:
-            response?.feature_scores ||
-            dashboard?.feature_scores ||
-            prev.backendFeatureScores ||
-            [],
+            featureScores.length > 0
+              ? featureScores
+              : prev.backendFeatureScores,
 
           backendPrioritization:
-            response?.feature_prioritization ||
-            response?.prioritization ||
-            dashboard?.feature_prioritization ||
-            dashboard?.prioritization ||
-            prev.backendPrioritization ||
-            [],
+            prioritization.length > 0
+              ? prioritization
+              : prev.backendPrioritization,
 
           backendRoadmap:
-            response?.roadmap ||
-            dashboard?.roadmap ||
-            prev.backendRoadmap ||
-            [],
+            roadmap.length > 0
+              ? roadmap
+              : prev.backendRoadmap,
 
           backendMilestoneRecommendation:
-            response?.milestone_recommendation ||
-            dashboard?.milestone_recommendation ||
-            prev.backendMilestoneRecommendation ||
+            response.milestone_recommendation ??
+            dashboard.milestone_recommendation ??
+            prev.backendMilestoneRecommendation ??
             null,
 
           backendExecutiveSummary:
-            response?.executive_summary ||
-            dashboard?.executive_summary ||
-            prev.backendExecutiveSummary ||
+            response.executive_summary ??
+            dashboard.executive_summary ??
+            prev.backendExecutiveSummary ??
             null,
 
           backendProductStrategy:
-            response?.product_strategy ||
-            dashboard?.product_strategy ||
-            prev.backendProductStrategy ||
+            response.product_strategy ??
+            dashboard.product_strategy ??
+            prev.backendProductStrategy ??
             null,
 
           backendEvaluation:
-            response?.evaluation ||
-            dashboard?.evaluation ||
-            prev.backendEvaluation ||
+            response.evaluation ??
+            dashboard.evaluation ??
+            prev.backendEvaluation ??
             null
 
         }));
+
+
+        setApiConnected(true);
 
 
         return dashboard;
@@ -510,7 +718,9 @@ export const AppProvider = ({
 
       }
 
-    }, [clearAnalysisData]);
+    }, [
+      clearAnalysisData
+    ]);
 
 
   // =======================================================
@@ -544,7 +754,9 @@ export const AppProvider = ({
 
 
       if (role === 'Admin') {
+
         return true;
+
       }
 
 
@@ -658,6 +870,7 @@ export const AppProvider = ({
 
     setIsLoggedIn(true);
 
+
     setActiveModule(
       'dashboard'
     );
@@ -677,6 +890,7 @@ export const AppProvider = ({
 
 
     setIsLoggedIn(false);
+
 
     setApiConnected(false);
 
@@ -706,7 +920,9 @@ export const AppProvider = ({
     (newItem) => {
 
       if (!newItem) {
+
         return;
+
       }
 
 
@@ -735,7 +951,9 @@ export const AppProvider = ({
     (apiPayload) => {
 
       if (!apiPayload) {
+
         return;
+
       }
 
 
@@ -747,8 +965,11 @@ export const AppProvider = ({
 
       const rows =
         Number(
-          apiPayload.rows_processed
-        ) || 0;
+          apiPayload.rows_processed ??
+          apiPayload.totalFeedback ??
+          apiPayload.total_feedback ??
+          0
+        );
 
 
       // =====================================================
@@ -757,29 +978,40 @@ export const AppProvider = ({
 
       const sentimentSummary =
         apiPayload.sentiment_summary ||
+        apiPayload.sentimentSummary ||
         {};
+
+      const normalizedSentimentSummary =
+        sentimentSummary.sentiment_distribution ||
+        sentimentSummary;
 
 
       const positive =
         Number(
-          sentimentSummary.Positive ??
-          sentimentSummary.positive ??
+          normalizedSentimentSummary.Positive ??
+          normalizedSentimentSummary.positive ??
+          apiPayload.positive_count ??
+          apiPayload.positive ??
           0
         );
 
 
       const negative =
         Number(
-          sentimentSummary.Negative ??
-          sentimentSummary.negative ??
+          normalizedSentimentSummary.Negative ??
+          normalizedSentimentSummary.negative ??
+          apiPayload.negative_count ??
+          apiPayload.negative ??
           0
         );
 
 
       const neutral =
         Number(
-          sentimentSummary.Neutral ??
-          sentimentSummary.neutral ??
+          normalizedSentimentSummary.Neutral ??
+          normalizedSentimentSummary.neutral ??
+          apiPayload.neutral_count ??
+          apiPayload.neutral ??
           0
         );
 
@@ -791,12 +1023,18 @@ export const AppProvider = ({
       const rawCategories =
         apiPayload.categorization_summary ||
         apiPayload.category_summary ||
+        apiPayload.categories ||
         {};
+
+      const normalizedCategories =
+        rawCategories.category_distribution ||
+        rawCategories.categories ||
+        rawCategories;
 
 
       const newCategories =
         Object.entries(
-          rawCategories
+          normalizedCategories
         ).map(
           ([name, value], index) => ({
 
@@ -829,12 +1067,18 @@ export const AppProvider = ({
 
       const rawThemes =
         apiPayload.theme_summary ||
+        apiPayload.themes ||
         {};
+
+      const normalizedThemes =
+        rawThemes.theme_distribution ||
+        rawThemes.themes ||
+        rawThemes;
 
 
       const newThemes =
         Object.entries(
-          rawThemes
+          normalizedThemes
         ).map(
           ([title, value], index) => ({
 
@@ -879,6 +1123,7 @@ export const AppProvider = ({
 
       const rawFeatures =
         apiPayload.feature_request_summary ||
+        apiPayload.featureRequests ||
         {};
 
 
@@ -893,7 +1138,7 @@ export const AppProvider = ({
         featureDistribution =
           rawFeatures.feature_request_distribution ||
           rawFeatures.features ||
-          {};
+          rawFeatures;
 
       }
 
@@ -1042,7 +1287,9 @@ export const AppProvider = ({
 
 
             if (!priority) {
+
               return feature;
+
             }
 
 
@@ -1075,7 +1322,7 @@ export const AppProvider = ({
       const trendReport =
         apiPayload.trend_report ||
         apiPayload.trendReport ||
-        null;
+        [];
 
 
       // =====================================================
@@ -1139,22 +1386,18 @@ export const AppProvider = ({
           apiPayload.feature_request_summary ||
           null,
 
-        trendReport:
-          trendReport,
+        trendReport,
 
 
         // ===================================================
         // MILESTONE 4
         // ===================================================
 
-        backendFeatureScores:
-          backendFeatureScores,
+        backendFeatureScores,
 
-        backendPrioritization:
-          backendPrioritization,
+        backendPrioritization,
 
-        backendRoadmap:
-          backendRoadmap,
+        backendRoadmap,
 
         backendMilestoneRecommendation:
           apiPayload.milestone_recommendation ||
@@ -1226,26 +1469,32 @@ export const AppProvider = ({
 
             ? newCategories.map(
                 category => ({
+
                   name:
                     category.name,
+
                   tickets:
                     category.count
+
                 })
               )
 
             : newThemes.map(
                 theme => ({
+
                   name:
                     theme.title,
+
                   tickets:
                     theme.ticketCount
+
                 })
               ),
 
         sentiment,
 
         trends:
-          trendReport || []
+          trendReport
 
       });
 
@@ -1262,15 +1511,17 @@ export const AppProvider = ({
   const promoteThemeToFeature =
     (themeId) => {
 
-      const theme =
+      const selectedTheme =
         (data.themes || []).find(
           item =>
             item.id === themeId
         );
 
 
-      if (!theme) {
+      if (!selectedTheme) {
+
         return;
+
       }
 
 
@@ -1280,22 +1531,22 @@ export const AppProvider = ({
           `feat-${Date.now()}`,
 
         title:
-          theme.title,
+          selectedTheme.title,
 
         themeId:
-          theme.id,
+          selectedTheme.id,
 
         description:
-          theme.aiSummary || '',
+          selectedTheme.aiSummary || '',
 
         upvotes:
           Number(
-            theme.ticketCount
+            selectedTheme.ticketCount
           ) || 0,
 
         reach:
           Number(
-            theme.ticketCount
+            selectedTheme.ticketCount
           ) || 0,
 
         impact:
@@ -1309,7 +1560,7 @@ export const AppProvider = ({
 
         riceScore:
           Number(
-            theme.ticketCount
+            selectedTheme.ticketCount
           ) || 0,
 
         kanoCategory:
@@ -1335,11 +1586,15 @@ export const AppProvider = ({
         ...prev,
 
         features: [
+
           newFeature,
+
           ...(prev.features || [])
+
         ],
 
         themes:
+
           (prev.themes || []).map(
             item =>
 
@@ -1360,7 +1615,6 @@ export const AppProvider = ({
       }));
 
 
-      // Existing reports route
       setActiveModule(
         'reports'
       );
@@ -1490,9 +1744,14 @@ export const AppProvider = ({
 
       try {
 
+        const selectedFeature =
+          (data.features || []).find(
+            feature => feature.id === featureId
+          );
+
         const response =
           await api.generatePrd(
-            featureId
+            selectedFeature?.title || featureId || ''
           );
 
 
@@ -1507,6 +1766,7 @@ export const AppProvider = ({
 
         const prdText =
           response.prd ||
+          response.data?.prd ||
           '';
 
 
@@ -1566,8 +1826,11 @@ export const AppProvider = ({
           ...prev,
 
           prds: [
+
             newPrd,
+
             ...(prev.prds || [])
+
           ]
 
         }));
@@ -1602,7 +1865,9 @@ export const AppProvider = ({
     (newTheme) => {
 
       if (!newTheme) {
+
         return;
+
       }
 
 
@@ -1611,8 +1876,11 @@ export const AppProvider = ({
         ...prev,
 
         themes: [
+
           newTheme,
+
           ...(prev.themes || [])
+
         ]
 
       }));
@@ -1628,9 +1896,10 @@ export const AppProvider = ({
         ...prev,
 
         themes:
+
           (prev.themes || []).filter(
-            theme =>
-              theme.id !== themeId
+            selectedTheme =>
+              selectedTheme.id !== themeId
           )
 
       }));
@@ -1646,7 +1915,9 @@ export const AppProvider = ({
     (newStory) => {
 
       if (!newStory) {
+
         return;
+
       }
 
 
@@ -1655,8 +1926,11 @@ export const AppProvider = ({
         ...prev,
 
         userStories: [
+
           ...(prev.userStories || []),
+
           newStory
+
         ]
 
       }));
@@ -1675,6 +1949,7 @@ export const AppProvider = ({
         ...prev,
 
         userStories:
+
           (
             prev.userStories || []
           ).map(
@@ -1704,6 +1979,7 @@ export const AppProvider = ({
         ...prev,
 
         userStories:
+
           (
             prev.userStories || []
           ).filter(
@@ -1724,7 +2000,9 @@ export const AppProvider = ({
     (msg) => {
 
       if (!msg) {
+
         return;
+
       }
 
 
@@ -1733,8 +2011,11 @@ export const AppProvider = ({
         ...prev,
 
         chatHistory: [
+
           ...(prev.chatHistory || []),
+
           msg
+
         ]
 
       }));

@@ -3,6 +3,8 @@
 # DASHBOARD API
 # =========================================================
 
+import pandas as pd
+
 from fastapi import APIRouter, HTTPException
 
 from services import app_state
@@ -15,6 +17,113 @@ from services import app_state
 router = APIRouter(
     tags=["Dashboard"]
 )
+
+
+# =========================================================
+# FIND COLUMN
+# =========================================================
+
+def find_column(df, possible_names):
+
+    normalized_columns = {
+        str(column).strip().lower(): column
+        for column in df.columns
+    }
+
+    for name in possible_names:
+
+        normalized_name = (
+            str(name)
+            .strip()
+            .lower()
+        )
+
+        if normalized_name in normalized_columns:
+
+            return normalized_columns[
+                normalized_name
+            ]
+
+    return None
+
+
+# =========================================================
+# CLEAN COUNT DICTIONARY
+# =========================================================
+
+def get_counts(df, column_name, default_value="Unknown"):
+
+    if not column_name:
+
+        return {}
+
+    values = (
+        df[column_name]
+        .fillna(default_value)
+        .astype(str)
+        .str.strip()
+    )
+
+    values = values[
+        values != ""
+    ]
+
+    return {
+        str(key): int(value)
+        for key, value in (
+            values
+            .value_counts()
+            .to_dict()
+            .items()
+        )
+    }
+
+
+# =========================================================
+# GET SUMMARY FROM PIPELINE
+# =========================================================
+
+def get_pipeline_summary(keys):
+
+    pipeline_result = (
+        getattr(
+            app_state,
+            "pipeline_result",
+            None
+        )
+        or {}
+    )
+
+    if not isinstance(
+        pipeline_result,
+        dict
+    ):
+
+        return {}
+
+    for key in keys:
+
+        value = pipeline_result.get(key)
+
+        if isinstance(value, dict):
+
+            for nested_key in (
+                "category_distribution",
+                "categorization_distribution",
+                "theme_distribution",
+                "sentiment_distribution",
+                "distribution",
+                "data"
+            ):
+
+                nested_value = value.get(nested_key)
+
+                if isinstance(nested_value, dict):
+                    return nested_value
+
+            return value
+
+    return {}
 
 
 # =========================================================
@@ -36,11 +145,11 @@ def dashboard():
         )
 
 
-    df = app_state.processed_df
+    df = app_state.processed_df.copy()
 
 
     # =====================================================
-    # BASIC INFORMATION
+    # TOTAL FEEDBACK
     # =====================================================
 
     total_feedback = int(
@@ -49,201 +158,256 @@ def dashboard():
 
 
     # =====================================================
-    # DASHBOARD DATA
+    # FIND ACTUAL COLUMNS
     # =====================================================
 
-    dashboard_data = {
+    sentiment_column = find_column(
+        df,
+        [
+            "sentiment",
+            "sentiment_label",
+            "sentiment analysis"
+        ]
+    )
 
-        "Total Feedback":
-            total_feedback,
 
-        "Positive Feedback":
-            0,
+    category_column = find_column(
+        df,
+        [
+            "category",
+            "categorization",
+            "feedback_category"
+        ]
+    )
 
-        "Negative Feedback":
-            0,
 
-        "Neutral Feedback":
-            0,
+    theme_column = find_column(
+        df,
+        [
+            "theme",
+            "themes",
+            "extracted_theme"
+        ]
+    )
 
-        "Categories":
-            {},
 
-        "Themes":
-            {},
+    pain_point_column = find_column(
+        df,
+        [
+            "pain_point",
+            "pain point",
+            "painpoint",
+            "pain_points"
+        ]
+    )
 
-        "Pain Points":
-            {},
 
-        "Feature Requests":
-            {},
+    feature_request_column = find_column(
+        df,
+        [
+            "feature_request",
+            "feature request",
+            "feature",
+            "feature_requests"
+        ]
+    )
 
-        "Feedback Trend":
-            [],
 
-        "Theme Distribution":
-            [],
+    date_column = find_column(
+        df,
+        [
+            "date",
+            "created_at",
+            "createdat",
+            "timestamp",
+            "created",
+            "time"
+        ]
+    )
 
-        "Product Insights":
-            {}
 
-    }
+    # =====================================================
+    # DEFAULT VALUES
+    # =====================================================
+
+    positive_count = 0
+    negative_count = 0
+    neutral_count = 0
+
+
+    categories = {}
+    themes = {}
+    pain_points = {}
+    feature_requests = {}
+    feedback_trend = []
 
 
     # =====================================================
     # SENTIMENT
     # =====================================================
 
-    if "sentiment" in df.columns:
+    if sentiment_column:
 
         sentiment_series = (
-            df["sentiment"]
-            .fillna("Unknown")
+            df[sentiment_column]
+            .fillna("")
             .astype(str)
             .str.strip()
+            .str.lower()
         )
 
 
-        dashboard_data[
-            "Positive Feedback"
-        ] = int(
-            (
-                sentiment_series.str.lower()
-                == "positive"
+        positive_count = int(
+            sentiment_series.isin(
+                ["positive", "positive feedback", "pos"]
             ).sum()
         )
 
 
-        dashboard_data[
-            "Negative Feedback"
-        ] = int(
-            (
-                sentiment_series.str.lower()
-                == "negative"
+        negative_count = int(
+            sentiment_series.isin(
+                ["negative", "negative feedback", "neg"]
             ).sum()
         )
 
 
-        dashboard_data[
-            "Neutral Feedback"
-        ] = int(
-            (
-                sentiment_series.str.lower()
-                == "neutral"
+        neutral_count = int(
+            sentiment_series.isin(
+                ["neutral", "neutral feedback", "neu"]
             ).sum()
+        )
+
+        if positive_count + negative_count + neutral_count == 0:
+            pipeline_sentiment = get_pipeline_summary(
+                ["sentiment_summary", "sentiment", "sentiment_analysis"]
+            )
+            positive_count = int(pipeline_sentiment.get("positive_feedback", 0) or 0)
+            negative_count = int(pipeline_sentiment.get("negative_feedback", 0) or 0)
+            neutral_count = int(pipeline_sentiment.get("neutral_feedback", 0) or 0)
+
+
+    # =====================================================
+    # FALLBACK SENTIMENT FROM PIPELINE RESULT
+    # =====================================================
+
+    if (
+        positive_count == 0
+        and negative_count == 0
+        and neutral_count == 0
+    ):
+
+        sentiment_summary = (
+            get_pipeline_summary(
+                [
+                    "sentiment_summary",
+                    "sentiment",
+                    "sentiment_analysis"
+                ]
+            )
+        )
+
+
+        positive_count = int(
+            sentiment_summary.get(
+                "Positive",
+                sentiment_summary.get(
+                    "positive",
+                    sentiment_summary.get("positive_feedback", 0)
+                )
+            )
+            or 0
+        )
+
+
+        negative_count = int(
+            sentiment_summary.get(
+                "Negative",
+                sentiment_summary.get(
+                    "negative",
+                    sentiment_summary.get("negative_feedback", 0)
+                )
+            )
+            or 0
+        )
+
+
+        neutral_count = int(
+            sentiment_summary.get(
+                "Neutral",
+                sentiment_summary.get(
+                    "neutral",
+                    sentiment_summary.get("neutral_feedback", 0)
+                )
+            )
+            or 0
         )
 
 
     # =====================================================
-    # CATEGORY DISTRIBUTION
+    # CATEGORIES
     # =====================================================
 
-    if "category" in df.columns:
+    categories = get_counts(
+        df,
+        category_column
+    )
+
+
+    if not categories:
 
         categories = (
-            df["category"]
-            .fillna("Unknown")
-            .astype(str)
-            .str.strip()
-        )
-
-
-        categories = categories[
-            categories != ""
-        ]
-
-
-        dashboard_data[
-            "Categories"
-        ] = (
-            categories
-            .value_counts()
-            .to_dict()
+            get_pipeline_summary(
+                [
+                    "categorization_summary",
+                    "category_summary",
+                    "categories"
+                ]
+            )
         )
 
 
     # =====================================================
-    # THEME DISTRIBUTION
+    # THEMES
     # =====================================================
 
-    if "theme" in df.columns:
+    themes = get_counts(
+        df,
+        theme_column,
+        "General"
+    )
+
+
+    if not themes:
 
         themes = (
-            df["theme"]
-            .fillna("General")
-            .astype(str)
-            .str.strip()
+            get_pipeline_summary(
+                [
+                    "theme_summary",
+                    "themes"
+                ]
+            )
         )
-
-
-        themes = themes[
-            themes != ""
-        ]
-
-
-        theme_counts = (
-            themes
-            .value_counts()
-            .to_dict()
-        )
-
-
-        dashboard_data[
-            "Themes"
-        ] = theme_counts
-
-
-        # -----------------------------------------------
-        # Frontend-friendly theme distribution
-        # -----------------------------------------------
-
-        dashboard_data[
-            "Theme Distribution"
-        ] = [
-
-            {
-                "name":
-                    name,
-
-                "value":
-                    int(value),
-
-                "count":
-                    int(value)
-
-            }
-
-            for name, value
-            in theme_counts.items()
-
-        ]
 
 
     # =====================================================
     # PAIN POINTS
     # =====================================================
 
-    if "pain_point" in df.columns:
+    pain_points = get_counts(
+        df,
+        pain_point_column
+    )
+
+
+    if not pain_points:
 
         pain_points = (
-            df["pain_point"]
-            .fillna("Unknown")
-            .astype(str)
-            .str.strip()
-        )
-
-
-        pain_points = pain_points[
-            pain_points != ""
-        ]
-
-
-        dashboard_data[
-            "Pain Points"
-        ] = (
-            pain_points
-            .value_counts()
-            .to_dict()
+            get_pipeline_summary(
+                [
+                    "pain_point_summary",
+                    "pain_points"
+                ]
+            )
         )
 
 
@@ -251,77 +415,42 @@ def dashboard():
     # FEATURE REQUESTS
     # =====================================================
 
-    if "feature_request" in df.columns:
+    feature_requests = get_counts(
+        df,
+        feature_request_column
+    )
+
+
+    if not feature_requests:
 
         feature_requests = (
-            df["feature_request"]
-            .fillna("Unknown")
-            .astype(str)
-            .str.strip()
+            get_pipeline_summary(
+                [
+                    "feature_request_summary",
+                    "feature_requests"
+                ]
+            )
         )
 
 
-        feature_requests = feature_requests[
-            feature_requests != ""
-        ]
+        if (
+            isinstance(
+                feature_requests,
+                dict
+            )
+            and "feature_request_distribution"
+            in feature_requests
+        ):
 
-
-        dashboard_data[
-            "Feature Requests"
-        ] = (
-            feature_requests
-            .value_counts()
-            .to_dict()
-        )
+            feature_requests = (
+                feature_requests[
+                    "feature_request_distribution"
+                ]
+            )
 
 
     # =====================================================
     # FEEDBACK TREND
-    # =====================================================
-    #
-    # Try to identify a date column from the processed
-    # dataframe.
-    #
-    # This prevents the frontend chart from always
-    # receiving an empty array.
-    #
-    # =====================================================
-
-    date_column = None
-
-
-    possible_date_columns = [
-
-        "date",
-
-        "Date",
-
-        "created_at",
-
-        "createdAt",
-
-        "timestamp",
-
-        "Timestamp",
-
-        "created",
-
-        "time"
-
-    ]
-
-
-    for column in possible_date_columns:
-
-        if column in df.columns:
-
-            date_column = column
-
-            break
-
-
-    # =====================================================
-    # BUILD DATE TREND
     # =====================================================
 
     if date_column:
@@ -331,26 +460,27 @@ def dashboard():
             trend_df = df.copy()
 
 
-            trend_df[
-                "_dashboard_date"
-            ] = pd.to_datetime(
-                trend_df[date_column],
-                errors="coerce"
+            trend_df["_dashboard_date"] = (
+                pd.to_datetime(
+                    trend_df[date_column],
+                    errors="coerce"
+                )
             )
 
 
-            trend_df = trend_df.dropna(
-                subset=[
-                    "_dashboard_date"
-                ]
+            trend_df = (
+                trend_df
+                .dropna(
+                    subset=[
+                        "_dashboard_date"
+                    ]
+                )
             )
 
 
             if not trend_df.empty:
 
-                trend_df[
-                    "_date_label"
-                ] = (
+                trend_df["_date_label"] = (
                     trend_df[
                         "_dashboard_date"
                     ]
@@ -372,20 +502,22 @@ def dashboard():
                 )
 
 
-                dashboard_data[
-                    "Feedback Trend"
-                ] = [
+                feedback_trend = [
 
                     {
                         "date":
-                            str(row[
-                                "_date_label"
-                            ]),
+                            str(
+                                row[
+                                    "_date_label"
+                                ]
+                            ),
 
                         "count":
-                            int(row[
-                                "count"
-                            ])
+                            int(
+                                row[
+                                    "count"
+                                ]
+                            )
 
                     }
 
@@ -393,7 +525,6 @@ def dashboard():
                     in grouped.iterrows()
 
                 ]
-
 
         except Exception as error:
 
@@ -406,229 +537,226 @@ def dashboard():
     # =====================================================
     # FALLBACK TREND
     # =====================================================
-    #
-    # If the dataset does not contain a usable date
-    # column, use the trend service result if available.
-    #
-    # =====================================================
 
-    if not dashboard_data[
-        "Feedback Trend"
-    ]:
+    if not feedback_trend:
 
-        try:
-
-            pipeline_result = (
-                app_state.pipeline_result
-                or {}
+        pipeline_result = (
+            getattr(
+                app_state,
+                "pipeline_result",
+                None
             )
+            or {}
+        )
 
 
-            trend_report = (
-                pipeline_result.get(
-                    "trend_report",
-                    {}
-                )
+        trend_report = (
+            pipeline_result.get(
+                "trend_report",
+                {}
             )
-
-
             if isinstance(
-                trend_report,
+                pipeline_result,
                 dict
-            ):
+            )
+            else {}
+        )
 
-                possible_trend = (
 
-                    trend_report.get(
-                        "feedback_trend"
-                    )
+        if isinstance(
+            trend_report,
+            dict
+        ):
 
-                    or
+            feedback_trend = (
 
-                    trend_report.get(
-                        "monthly_feedback_trend"
-                    )
-
-                    or
-
-                    trend_report.get(
-                        "trends"
-                    )
-
-                    or []
-
+                trend_report.get(
+                    "feedback_trend"
                 )
 
+                or
 
-                if isinstance(
-                    possible_trend,
-                    list
-                ):
+                trend_report.get(
+                    "monthly_feedback_trend"
+                )
 
-                    dashboard_data[
-                        "Feedback Trend"
-                    ] = (
-                        possible_trend
-                    )
+                or
 
-        except Exception as error:
+                trend_report.get(
+                    "trends"
+                )
 
-            print(
-                "Trend fallback failed:",
-                error
+                or []
+
             )
 
 
     # =====================================================
-    # PRODUCT INSIGHTS
+    # THEME DISTRIBUTION
     # =====================================================
 
-    themes_dict = dashboard_data[
-        "Themes"
+    theme_distribution = [
+
+        {
+            "name":
+                str(name),
+
+            "value":
+                int(value),
+
+            "count":
+                int(value)
+
+        }
+
+        for name, value
+        in themes.items()
+
     ]
 
 
-    categories_dict = dashboard_data[
-        "Categories"
-    ]
+    # =====================================================
+    # TOP VALUES
+    # =====================================================
 
+    def get_top_value(data):
 
-    pain_points_dict = dashboard_data[
-        "Pain Points"
-    ]
+        if not data:
 
+            return None, 0
 
-    feature_requests_dict = dashboard_data[
-        "Feature Requests"
-    ]
-
-
-    # -----------------------------------------------
-    # Top theme
-    # -----------------------------------------------
-
-    top_theme = None
-
-    if themes_dict:
-
-        top_theme = max(
-            themes_dict.items(),
+        name, count = max(
+            data.items(),
             key=lambda item: item[1]
         )
 
-
-    # -----------------------------------------------
-    # Top category
-    # -----------------------------------------------
-
-    top_category = None
-
-    if categories_dict:
-
-        top_category = max(
-            categories_dict.items(),
-            key=lambda item: item[1]
+        return (
+            str(name),
+            int(count)
         )
 
 
-    # -----------------------------------------------
-    # Top pain point
-    # -----------------------------------------------
-
-    top_pain_point = None
-
-    if pain_points_dict:
-
-        top_pain_point = max(
-            pain_points_dict.items(),
-            key=lambda item: item[1]
+    top_theme, top_theme_count = (
+        get_top_value(
+            themes
         )
+    )
 
 
-    # -----------------------------------------------
-    # Top feature request
-    # -----------------------------------------------
-
-    top_feature_request = None
-
-    if feature_requests_dict:
-
-        top_feature_request = max(
-            feature_requests_dict.items(),
-            key=lambda item: item[1]
-        )
+    (
+        top_category,
+        top_category_count
+    ) = get_top_value(
+        categories
+    )
 
 
-    dashboard_data[
-        "Product Insights"
-    ] = {
+    (
+        top_pain_point,
+        top_pain_point_count
+    ) = get_top_value(
+        pain_points
+    )
 
-        "total_themes":
-            len(themes_dict),
 
-        "top_theme":
-            (
-                top_theme[0]
-                if top_theme
-                else None
-            ),
+    (
+        top_feature_request,
+        top_feature_request_count
+    ) = get_top_value(
+        feature_requests
+    )
 
-        "top_theme_count":
-            (
-                int(top_theme[1])
-                if top_theme
-                else 0
-            ),
 
-        "top_category":
-            (
-                top_category[0]
-                if top_category
-                else None
-            ),
+    # =====================================================
+    # DASHBOARD DATA
+    # =====================================================
 
-        "top_category_count":
-            (
-                int(top_category[1])
-                if top_category
-                else 0
-            ),
+    dashboard_data = {
 
-        "top_pain_point":
-            (
-                top_pain_point[0]
-                if top_pain_point
-                else None
-            ),
+        "Total Feedback":
+            total_feedback,
 
-        "top_pain_point_count":
-            (
-                int(top_pain_point[1])
-                if top_pain_point
-                else 0
-            ),
+        "Positive Feedback":
+            positive_count,
 
-        "top_feature_request":
-            (
-                top_feature_request[0]
-                if top_feature_request
-                else None
-            ),
+        "Negative Feedback":
+            negative_count,
 
-        "top_feature_request_count":
-            (
-                int(
-                    top_feature_request[1]
-                )
-                if top_feature_request
-                else 0
-            )
+        "Neutral Feedback":
+            neutral_count,
+
+        "Categories":
+            categories,
+
+        "Themes":
+            themes,
+
+        "Pain Points":
+            pain_points,
+
+        "Feature Requests":
+            feature_requests,
+
+        "Feedback Trend":
+            feedback_trend,
+
+        "Theme Distribution":
+            theme_distribution,
+
+        "Product Insights": {
+
+            "total_themes":
+                len(themes),
+
+            "top_theme":
+                top_theme,
+
+            "top_theme_count":
+                top_theme_count,
+
+            "top_category":
+                top_category,
+
+            "top_category_count":
+                top_category_count,
+
+            "top_pain_point":
+                top_pain_point,
+
+            "top_pain_point_count":
+                top_pain_point_count,
+
+            "top_feature_request":
+                top_feature_request,
+
+            "top_feature_request_count":
+                top_feature_request_count
+
+        }
 
     }
 
 
     # =====================================================
-    # RETURN RESPONSE
+    # DEBUG
+    # =====================================================
+
+    print(
+        "DASHBOARD SENTIMENT:",
+        positive_count,
+        negative_count,
+        neutral_count
+    )
+
+
+    print(
+        "DASHBOARD COLUMNS:",
+        list(df.columns)
+    )
+
+
+    # =====================================================
+    # RETURN
     # =====================================================
 
     return {

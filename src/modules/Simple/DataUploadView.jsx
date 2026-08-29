@@ -4,7 +4,7 @@ import { UploadCloud, CheckCircle2, Sparkles, ArrowRight, AlertCircle, FileSprea
 import { api } from '../../services/api';
 
 export const DataUploadView = () => {
-  const { setUploadedData, setActiveModule } = useApp();
+  const { setUploadedData, setActiveModule, fetchBackendDashboard } = useApp();
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedResult, setUploadedResult] = useState(null);
@@ -101,6 +101,8 @@ export const DataUploadView = () => {
         pain_point_summary: resultPayload.pain_point_summary || {},
         feature_request_summary: resultPayload.feature_request_summary || {}
       });
+
+      await fetchBackendDashboard();
     } catch (err) {
       console.error('Upload Error:', err);
       setError('Failed to process dataset file.');

@@ -121,14 +121,29 @@ class PRDGenerationService:
     # GENERATE PRD
     # =====================================================
 
-    def generate_prd(self, df):
+    def generate_prd(self, df, feature_title=None):
 
-        total_feedback = len(df)
+        scoped_df = df
+
+        if feature_title and "feature_request" in df.columns:
+            matches = (
+                df["feature_request"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.casefold()
+                == feature_title.strip().casefold()
+            )
+
+            if matches.any():
+                scoped_df = df[matches]
+
+        total_feedback = len(scoped_df)
 
         # CATEGORY
-        if "category" in df.columns:
+        if "category" in scoped_df.columns:
             category_summary = (
-                df["category"]
+                scoped_df["category"]
                 .dropna()
                 .astype(str)
                 .value_counts()
@@ -138,9 +153,9 @@ class PRDGenerationService:
             category_summary = {}
 
         # SENTIMENT
-        if "sentiment" in df.columns:
+        if "sentiment" in scoped_df.columns:
             sentiment_summary = (
-                df["sentiment"]
+                scoped_df["sentiment"]
                 .dropna()
                 .astype(str)
                 .value_counts()
@@ -150,9 +165,9 @@ class PRDGenerationService:
             sentiment_summary = {}
 
         # THEME
-        if "theme" in df.columns:
+        if "theme" in scoped_df.columns:
             theme_summary = (
-                df["theme"]
+                scoped_df["theme"]
                 .dropna()
                 .astype(str)
                 .value_counts()
@@ -162,9 +177,9 @@ class PRDGenerationService:
             theme_summary = {}
 
         # PAIN POINT
-        if "pain_point" in df.columns:
+        if "pain_point" in scoped_df.columns:
             pain_point_summary = (
-                df["pain_point"]
+                scoped_df["pain_point"]
                 .dropna()
                 .astype(str)
                 .value_counts()
@@ -174,9 +189,9 @@ class PRDGenerationService:
             pain_point_summary = {}
 
         # FEATURE REQUEST
-        if "feature_request" in df.columns:
+        if "feature_request" in scoped_df.columns:
             feature_request_summary = (
-                df["feature_request"]
+                scoped_df["feature_request"]
                 .dropna()
                 .astype(str)
                 .value_counts()
@@ -186,7 +201,7 @@ class PRDGenerationService:
             feature_request_summary = {}
 
         # RECOMMENDATIONS
-        recommendations = self.get_recommendations(df)
+        recommendations = self.get_recommendations(scoped_df)
 
         # =================================================
         # RAG CONTEXT
@@ -241,6 +256,8 @@ You are an experienced Senior Product Manager.
 Create a professional, evidence-based Product
 Requirements Document from the processed customer
 feedback dataset.
+
+{f'Focus the PRD specifically on the feature request: {feature_title}' if feature_title else 'Cover the complete analyzed dataset.'}
 
 Do not perform data cleaning.
 
@@ -297,41 +314,34 @@ CUSTOMER EVIDENCE
 PRD STRUCTURE
 ==================================================
 
-Generate the following sections:
+Generate the following sections in exactly this order, using the exact
+Markdown headings shown below:
 
-1. Overall Customer Feedback Insights
+# Product Requirements Document
+## 1. Document Summary
+## 2. Customer Feedback Insights
+## 3. Customer Sentiment Overview
+## 4. Major Customer Problems
+## 5. Product Themes
+## 6. Feature Request Analysis
+## 7. Product Opportunities
+## 8. Problem Statement
+## 9. Product Objective
+## 10. Proposed Solution
+## 11. Target Users
+## 12. Functional Requirements
+## 13. Non-Functional Requirements
+## 14. User Experience Considerations
+## 15. Success Metrics
+## 16. Risks and Assumptions
+## 17. Future Enhancements
 
-2. Customer Sentiment Overview
-
-3. Major Customer Problems
-
-4. Top Product Themes
-
-5. Feature Request Analysis
-
-6. Recommended Product Areas
-
-7. Product Opportunities
-
-8. Problem Statement
-
-9. Product Objective
-
-10. Proposed Solution
-
-11. Target Users
-
-12. Functional Requirements
-
-13. Non-Functional Requirements
-
-14. User Experience Considerations
-
-15. Success Metrics
-
-16. Risks and Assumptions
-
-17. Future Enhancements
+For every numbered section, include a concise paragraph or a bullet list.
+For Functional Requirements, use numbered requirements in this format:
+FR-01: [actionable requirement]
+FR-02: [actionable requirement]
+For Success Metrics, include Metric, Baseline, Target, and Measurement.
+For Risks and Assumptions, separate Risks from Assumptions.
 
 ==================================================
 IMPORTANT
@@ -367,6 +377,8 @@ Return professional human-readable Markdown.
 Do not return JSON.
 
 Do not return Python dictionaries.
+
+Do not use asterisk characters anywhere in the response.
 """
 
         # =================================================

@@ -22,36 +22,24 @@ export const LoginPage = ({ onBackToLanding }) => {
 
     try {
       if (isRegisterMode) {
-        try {
-          await api.register({
-            username: username || email.split('@')[0],
-            email,
-            password
-          });
-          setSuccessMsg('Registration successful! Please sign in with your credentials.');
-          setIsRegisterMode(false);
-        } catch (apiErr) {
-          // If backend isn't running or returned an error, fallback gracefully
-          console.warn('Backend registration notice:', apiErr.message);
-          setSuccessMsg('Account registered successfully! Please sign in.');
-          setIsRegisterMode(false);
-        }
+        await api.register({
+          username: username || email.split('@')[0],
+          email,
+          password
+        });
+        setSuccessMsg('Registration successful! Please sign in with your credentials.');
+        setIsRegisterMode(false);
       } else {
-        let token = 'local-demo-jwt-token';
-        let userRole = role;
-        try {
-          const authRes = await api.login({ email, password });
-          if (authRes?.access_token) {
-            token = authRes.access_token;
-          }
-        } catch (apiErr) {
-          console.warn('FastAPI backend connection note (using fallback auth):', apiErr.message);
+        const authRes = await api.login({ email, password });
+
+        if (!authRes?.access_token) {
+          throw new Error('Authentication server returned no access token.');
         }
 
         login({
           email,
-          role: userRole,
-          token,
+          role,
+          token: authRes.access_token,
           username: username || email.split('@')[0]
         });
       }

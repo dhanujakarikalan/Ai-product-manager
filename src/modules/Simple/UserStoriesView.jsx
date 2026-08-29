@@ -61,6 +61,57 @@ export const UserStoriesView = () => {
   ] = useState("");
 
 
+  const [
+    manualStory,
+    setManualStory
+  ] = useState({
+    role: "",
+    feature: "",
+    action: "",
+    benefit: ""
+  });
+
+
+  const [
+    manualError,
+    setManualError
+  ] = useState("");
+
+
+  const manualStories = (data?.userStories || []).filter(
+    story => story.source === "Manual"
+  );
+
+
+  const handleManualStoryChange = (event) => {
+    const { name, value } = event.target;
+    setManualStory(prev => ({ ...prev, [name]: value }));
+  };
+
+
+  const handleAddManualStory = (event) => {
+    event.preventDefault();
+    setManualError("");
+
+    if (Object.values(manualStory).some(value => !value.trim())) {
+      setManualError("Complete all user story fields before saving.");
+      return;
+    }
+
+    addUserStory({
+      id: `manual-${Date.now()}`,
+      ...manualStory,
+      title: `${manualStory.role} ${manualStory.feature} story`,
+      description: `As a ${manualStory.role}, I want to ${manualStory.action}, so that ${manualStory.benefit}.`,
+      status: "Draft",
+      source: "Manual",
+      createdAt: new Date().toLocaleString()
+    });
+
+    setManualStory({ role: "", feature: "", action: "", benefit: "" });
+  };
+
+
   // =======================================================
   // GENERATE USER STORIES
   // =======================================================
@@ -571,6 +622,94 @@ export const UserStoriesView = () => {
         </div>
 
       )}
+
+
+      <div
+        className="glass-panel"
+        style={{
+          marginTop: "20px",
+          padding: "24px"
+        }}
+      >
+
+        <div style={{ marginBottom: "18px" }}>
+          <h3 style={{ margin: 0 }}>Write a User Story</h3>
+          <p style={{ color: "var(--text-muted)", marginTop: "6px", fontSize: "0.88rem" }}>
+            Create a draft manually using the standard Agile format.
+          </p>
+        </div>
+
+        <form onSubmit={handleAddManualStory}>
+          <div className="grid-2" style={{ gap: "14px" }}>
+            <input
+              className="input-field"
+              name="role"
+              value={manualStory.role}
+              onChange={handleManualStoryChange}
+              placeholder="As a... (for example, Product Manager)"
+            />
+            <input
+              className="input-field"
+              name="feature"
+              value={manualStory.feature}
+              onChange={handleManualStoryChange}
+              placeholder="Feature or capability"
+            />
+            <input
+              className="input-field"
+              name="action"
+              value={manualStory.action}
+              onChange={handleManualStoryChange}
+              placeholder="I want to..."
+            />
+            <input
+              className="input-field"
+              name="benefit"
+              value={manualStory.benefit}
+              onChange={handleManualStoryChange}
+              placeholder="So that..."
+            />
+          </div>
+
+          {manualError && (
+            <p style={{ color: "#f43f5e", marginTop: "12px", fontSize: "0.86rem" }}>
+              {manualError}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className="btn btn-secondary"
+            style={{ marginTop: "16px" }}
+          >
+            <FileText size={16} />
+            Save Draft Story
+          </button>
+        </form>
+
+        {manualStories.length > 0 && (
+          <div style={{ marginTop: "24px" }}>
+            <h4>Manual Drafts</h4>
+            <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
+              {manualStories.map(story => (
+                <div
+                  key={story.id}
+                  className="glass-card"
+                  style={{ padding: "16px" }}
+                >
+                  <strong>
+                    As a {story.role}, I want to {story.action}, so that {story.benefit}.
+                  </strong>
+                  <p style={{ color: "var(--text-muted)", marginTop: "6px", fontSize: "0.84rem" }}>
+                    Feature: {story.feature}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
 
 
       {/* =================================================

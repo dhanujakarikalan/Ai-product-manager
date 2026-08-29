@@ -259,6 +259,42 @@ export const api = {
 
 
   // =======================================================
+  // AUTHENTICATION
+  // =======================================================
+
+  async register({ username, email, password }) {
+
+    return request(
+      '/auth/register',
+      {
+        method: 'POST',
+        body: JSON.stringify({ username, email, password })
+      }
+    );
+
+  },
+
+
+  async login({ email, password }) {
+
+    const response = await request(
+      '/auth/login',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      }
+    );
+
+    if (response?.access_token) {
+      localStorage.setItem('access_token', response.access_token);
+    }
+
+    return response;
+
+  },
+
+
+  // =======================================================
   // HEALTH
   // =======================================================
 
@@ -309,10 +345,14 @@ export const api = {
   // PRD
   // =======================================================
 
-  async generatePrd() {
+  async generatePrd(featureTitle = '') {
+
+    const query = featureTitle
+      ? `?feature_title=${encodeURIComponent(featureTitle)}`
+      : '';
 
     return request(
-      '/prd/generate',
+      `/prd/generate${query}`,
       {
         method: 'POST'
       }

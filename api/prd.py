@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from services.prd_generation import (
     PRDGenerationService
@@ -31,7 +31,12 @@ prd_service = (
 # =========================================================
 
 @router.post("/generate")
-def generate_prd():
+def generate_prd(
+    feature_title: str | None = Query(
+        default=None,
+        description="Optional feature request to scope the PRD."
+    )
+):
 
     try:
 
@@ -61,10 +66,9 @@ def generate_prd():
         # GENERATE PRD
         # =================================================
 
-        result = (
-            prd_service.generate_prd(
-                processed_df
-            )
+        result = prd_service.generate_prd(
+            processed_df,
+            feature_title=feature_title
         )
 
         # =================================================
