@@ -1,3 +1,9 @@
+# =========================================================
+# services/user_story_generation.py
+# =========================================================
+
+import re
+
 from services.llm_service import LLMService
 
 
@@ -9,7 +15,168 @@ class UserStoryGenerationService:
 
 
     # =====================================================
-    # GENERATE USER STORIES + WORK ITEMS
+    # EXTRACT FUNCTIONAL REQUIREMENTS
+    # =====================================================
+
+    def extract_functional_requirements(self, prd):
+
+        if not prd:
+            return ""
+
+        text = str(prd).strip()
+
+        # -------------------------------------------------
+        # Try exact existing PRD heading
+        # -------------------------------------------------
+
+        start_patterns = [
+            r"12\.\s*Functional Requirements",
+            r"Functional Requirements",
+            r"Functional requirements"
+        ]
+
+        end_patterns = [
+            r"13\.\s*Non-Functional Requirements",
+            r"Non-Functional Requirements",
+            r"Non-Functional requirements",
+            r"14\.\s*User Experience",
+            r"User Experience Considerations"
+        ]
+
+        start = -1
+
+        for pattern in start_patterns:
+
+            match = re.search(
+                pattern,
+                text,
+                re.IGNORECASE
+            )
+
+            if match:
+
+                start = match.start()
+
+                break
+
+
+        # -------------------------------------------------
+        # If functional requirements are not found
+        # -------------------------------------------------
+
+        if start == -1:
+
+            # Use complete PRD as fallback.
+            # This prevents empty user-story generation.
+
+            return text[:15000]
+
+
+        # -------------------------------------------------
+        # Find next section
+        # -------------------------------------------------
+
+        end = len(text)
+
+        content_after_start = text[start + 1:]
+
+
+        for pattern in end_patterns:
+
+            match = re.search(
+                pattern,
+                content_after_start,
+                re.IGNORECASE
+            )
+
+            if match:
+
+                possible_end = (
+                    start +
+                    1 +
+                    match.start()
+                )
+
+                if possible_end > start:
+
+                    end = possible_end
+
+                    break
+
+
+        functional_requirements = (
+            text[start:end]
+            .strip()
+        )
+
+
+        return functional_requirements[:15000]
+
+
+    # =====================================================
+    # VALIDATE LLM OUTPUT
+    # =====================================================
+
+    def validate_user_story_output(
+        self,
+        result,
+        expected_count
+    ):
+
+        if not result:
+
+            return False
+
+
+        text = str(result).strip()
+
+
+        if len(text) < 100:
+
+            return False
+
+
+        # -------------------------------------------------
+        # Count USER STORY sections
+        # -------------------------------------------------
+
+        story_matches = re.findall(
+            r"USER STORY\s*#?\s*\d+",
+            text,
+            re.IGNORECASE
+        )
+
+
+        # -------------------------------------------------
+        # If exact count is not returned, still allow
+        # reasonably structured output.
+        # -------------------------------------------------
+
+        if len(story_matches) >= expected_count:
+
+            return True
+
+
+        # -------------------------------------------------
+        # Check whether at least one valid story exists
+        # -------------------------------------------------
+
+        has_user_story_format = (
+            re.search(
+                r"As a\s+.+?\s*,?\s*I want\s+.+?\s*,?\s*So that",
+                text,
+                re.IGNORECASE |
+                re.DOTALL
+            )
+            is not None
+        )
+
+
+        return bool(has_user_story_format)
+
+
+    # =====================================================
+    # GENERATE USER STORIES
     # =====================================================
 
     def generate_user_stories(
@@ -31,8 +198,70 @@ class UserStoryGenerationService:
                 "message":
                     "No PRD available. Please generate PRD first.",
 
-                "user_stories": ""
+                "user_stories": "",
+
+                "count": 0
             }
+
+
+        # =================================================
+        # NORMALIZE COUNT
+        # =================================================
+
+        try:
+
+            count = int(count)
+
+        except Exception:
+
+            count = 10
+
+
+        count = max(
+            1,
+            min(count, 20)
+        )
+
+
+        # =================================================
+        # EXTRACT FUNCTIONAL REQUIREMENTS
+        # =================================================
+
+        functional_requirements = (
+            self.extract_functional_requirements(
+                prd
+            )
+        )
+
+
+        if not functional_requirements:
+
+            return {
+
+                "status": "failed",
+
+                "message":
+                    "Functional requirements could not be extracted from the PRD.",
+
+                "user_stories": "",
+
+                "count": 0
+            }
+
+
+        print("\n" + "=" * 60)
+        print("USER STORY GENERATION")
+        print("=" * 60)
+
+        print(
+            "Requested stories:",
+            count
+        )
+
+        print(
+            "Functional requirement length:",
+            len(functional_requirements)
+        )
 
 
         # =================================================
@@ -42,199 +271,262 @@ class UserStoryGenerationService:
         prompt = f"""
 You are an experienced Agile Product Manager.
 
-The Product Requirements Document has already been
-generated from analyzed customer feedback.
+You are given the Functional Requirements section
+from an existing Product Requirements Document.
 
-Your task is to convert the Functional Requirements
-from the PRD into prioritized Agile User Stories.
+Your job is to convert those requirements into
+exactly {count} high-quality, implementation-ready
+Agile user stories.
 
-Generate exactly {count} user stories.
+Do not create a new PRD.
+
+Do not invent unrelated functionality.
+
+Do not use information that is not supported by
+the provided requirements.
 
 
-=========================================================
+==================================================
+FUNCTIONAL REQUIREMENTS
+==================================================
+
+{functional_requirements}
+
+
+==================================================
 PRIORITIZATION
-=========================================================
+==================================================
 
-Identify the Functional Requirements from the PRD.
-
-Prioritize them based on:
+Prioritize the stories using:
 
 1. Customer impact
-2. Frequency of the problem
-3. Pain-point severity
-4. Business importance
-5. Product priority
-6. Evidence already present in the PRD
+2. Problem severity
+3. Frequency of the problem
+4. Business/product importance
+5. Evidence from the requirements
 
-The most important requirement must appear first.
+Use these priorities:
 
-Do not randomly select requirements.
-
-
-=========================================================
-USER STORY RULES
-=========================================================
-
-Each story must:
-
-- Come from a Functional Requirement.
-- Be written from the customer/user perspective.
-- Clearly describe what the user wants.
-- Clearly describe why the user needs it.
-- Be concise.
-- Be actionable.
-- Not invent unrelated functionality.
-- Not create functionality unsupported by the PRD.
+- Critical
+- High
+- Medium
+- Low
 
 
-=========================================================
-WORK ITEM RULES
-=========================================================
+==================================================
+USER STORY FORMAT
+==================================================
 
-For every User Story, generate only 2–3 lightweight
-development work items.
+Every story MUST follow this format:
 
-Work items should be directly related to the User Story.
-
-Examples:
-
-- Backend implementation
-- Frontend implementation
-- API integration
-- Database change
-- Testing
-
-Do not generate unnecessary technical details.
-
-Do not generate more than 3 work items for one story.
-
-
-=========================================================
-OUTPUT FORMAT
-=========================================================
-
-RECOMMENDED USER STORY #1
+USER STORY #1
 
 User Story ID:
 US-001
 
-Recommendation Rank:
-1
-
 Priority:
 High
 
-Functional Requirement:
-[One-line requirement]
-
 Title:
-[Short title]
+Short meaningful title
+
+Functional Requirement:
+FR-01 - Related requirement
 
 User Story:
-As a [type of user],
+As a [specific user],
 I want [specific capability],
-So that [customer/business benefit].
-
+So that [clear customer/business benefit].
 
 Acceptance Criteria:
 
-1. Given [condition],
-   When [action],
-   Then [expected result].
+1. Given [initial condition]
+   When [action]
+   Then [expected result]
 
-2. Given [condition],
-   When [action],
-   Then [expected result].
+2. Given [initial condition]
+   When [action]
+   Then [expected result]
 
-3. Given [condition],
-   When [action],
-   Then [expected result].
-
+3. Given [initial condition]
+   When [action]
+   Then [expected result]
 
 Work Items:
 
-1. [Simple actionable development task]
+1. Backend implementation
 
-2. [Simple actionable development task]
+2. Frontend implementation
 
-3. [Testing/integration task if required]
+3. Testing
 
 
----------------------------------------------------------
+==================================================
+QUALITY RULES
+==================================================
 
-RECOMMENDED USER STORY #2
+Each story must:
 
-User Story ID:
-US-002
+- Represent ONE clear product capability.
+- Be directly traceable to a functional requirement.
+- Have a meaningful title.
+- Identify a realistic user.
+- Explain the customer benefit.
+- Have 2 or 3 acceptance criteria.
+- Use Given / When / Then.
+- Have 2 or 3 practical work items.
+- Be independently understandable.
+- Avoid duplicate stories.
+- Avoid vague statements.
+- Avoid technical implementation details inside
+  the actual user story.
+- Avoid invented features.
 
-Recommendation Rank:
-2
+Do NOT write:
 
-Priority:
-High / Medium / Low
+"As a user, I want everything to work."
+
+Instead make the user and capability specific.
+
+For example:
+
+"As a product manager,
+I want to view feedback themes by frequency,
+so that I can identify the most important
+customer problems."
+
+
+==================================================
+TRACEABILITY
+==================================================
+
+Every user story MUST contain:
 
 Functional Requirement:
-[One-line requirement]
+FR-XX - ...
 
-Title:
-[Short title]
+The FR reference must correspond to a requirement
+contained in the provided Functional Requirements.
 
-User Story:
-As a [type of user],
-I want [specific capability],
-So that [customer/business benefit].
+Do not invent FR numbers that have no relation to
+the provided requirements.
 
+If the original requirements do not contain IDs,
+create sequential references such as:
 
-Acceptance Criteria:
-
-1. Given...
-   When...
-   Then...
+FR-01
+FR-02
+FR-03
 
 
-Work Items:
+==================================================
+EXACT NUMBER OF STORIES
+==================================================
 
-1. [Development task]
+Generate exactly {count} user stories.
 
-2. [Development task]
+Do not generate fewer.
 
-3. [Testing/integration task if required]
+Do not generate more.
+
+Number them sequentially:
+
+USER STORY #1
+USER STORY #2
+USER STORY #3
+
+...
+
+USER STORY #{count}
 
 
-Continue until exactly {count} user stories are generated.
-
-
-=========================================================
+==================================================
 IMPORTANT
-=========================================================
+==================================================
 
-Do not analyze the raw feedback again.
+Return ONLY the user stories.
+
+Do not explain your reasoning.
+
+Do not provide JSON.
+
+Do not provide Python dictionaries.
+
+Do not use markdown tables.
+
+Do not generate an Executive Summary.
+
+Do not generate a Product Roadmap.
+
+Do not generate a Product Strategy.
+
+Do not generate testing reports.
 
 Do not generate a new PRD.
 
-Use the Functional Requirements and priorities already
-available in the PRD.
-
-The first story should represent the most important
-customer/product requirement.
-
-Keep work items short and practical.
-
-
-=========================================================
-PRD
-=========================================================
-
-{prd}
+The output must be normal human-readable text.
 """
 
 
         # =================================================
-        # GEMINI
+        # CALL LLM
         # =================================================
 
         result = self.llm.generate(
             prompt
+        )
+
+
+        # =================================================
+        # VALIDATE RESULT
+        # =================================================
+
+        valid = self.validate_user_story_output(
+            result,
+            count
+        )
+
+
+        if not valid:
+
+            print(
+                "WARNING: User story output "
+                "did not pass validation."
+            )
+
+
+            return {
+
+                "status":
+                    "failed",
+
+                "message":
+                    "The AI generated an incomplete or invalid user story response. Please try again.",
+
+                "count":
+                    0,
+
+                "requested_count":
+                    count,
+
+                "user_stories":
+                    result or ""
+            }
+
+
+        # =================================================
+        # COUNT GENERATED STORIES
+        # =================================================
+
+        story_matches = re.findall(
+            r"USER STORY\s*#?\s*\d+",
+            str(result),
+            re.IGNORECASE
+        )
+
+
+        generated_count = len(
+            story_matches
         )
 
 
@@ -251,6 +543,9 @@ PRD
                 "User stories and work items generated successfully.",
 
             "count":
+                generated_count,
+
+            "requested_count":
                 count,
 
             "user_stories":

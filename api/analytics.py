@@ -1,142 +1,230 @@
 from fastapi import APIRouter, HTTPException
 from services import app_state
 
+
 router = APIRouter(
     prefix="/analytics",
     tags=["Analytics"]
 )
 
 
+def find_column(df, possible_names):
+
+    normalized_columns = {
+        str(column).strip().lower(): column
+        for column in df.columns
+    }
+
+    for name in possible_names:
+
+        column = normalized_columns.get(str(name).strip().lower())
+
+        if column:
+            return column
+
+    return None
+
+
+def get_counts(df, column_name):
+
+    if not column_name:
+        return {}
+
+    values = (
+        df[column_name]
+        .fillna("Unknown")
+        .astype(str)
+        .str.strip()
+    )
+
+    values = values[values != ""]
+
+    return {
+        str(key): int(value)
+        for key, value in values.value_counts().to_dict().items()
+    }
+
+
 @router.get("/")
 def get_analytics():
 
-    # ==========================================
-    # 1. CHECK DATASET
-    # ==========================================
+    print("\n========== ANALYTICS API ==========")
+    print("Dataset uploaded:", app_state.dataset_uploaded)
+    print("Processed dataframe exists:", app_state.processed_df is not None)
 
     if app_state.processed_df is None:
 
+        print("ERROR: No dataframe found")
+        print("===================================\n")
+
         raise HTTPException(
             status_code=400,
-            detail="Please upload dataset first."
+            detail="Please upload a dataset first."
         )
 
     df = app_state.processed_df
 
-    # ==========================================
-    # 2. TOTAL FEEDBACK
-    # ==========================================
+    print("Total rows:", len(df))
+    print("Columns:", df.columns.tolist())
+    print("===================================\n")
 
-    total_feedback = len(df)
 
-    # ==========================================
-    # 3. CATEGORY
-    # ==========================================
+    total_feedback = int(len(df))
 
-    if "category" in df.columns:
 
-        category_summary = (
-            df["category"]
-            .fillna("Unknown")
-            .value_counts()
-            .to_dict()
-        )
+    # CATEGORY SUMMARY
 
-    else:
+    category_summary = get_counts(
+        df,
+        find_column(df, ["category", "categorization", "feedback_category"])
+    )
 
-        category_summary = {}
 
-    # ==========================================
-    # 4. SENTIMENT
-    # ==========================================
+    # SENTIMENT SUMMARY
 
-    if "sentiment" in df.columns:
+    sentiment_summary = get_counts(
+        df,
+        find_column(df, ["sentiment", "sentiment_label", "sentiment analysis"])
+    )
 
-        sentiment_summary = (
-            df["sentiment"]
-            .fillna("Unknown")
-            .value_counts()
-            .to_dict()
-        )
 
-    else:
+    # THEME SUMMARY
 
-        sentiment_summary = {}
+    theme_summary = get_counts(
+        df,
+        find_column(df, ["theme", "themes", "extracted_theme"])
+    )
 
-    # ==========================================
-    # 5. THEME
-    # ==========================================
 
-    if "theme" in df.columns:
+    # PAIN POINT SUMMARY
 
-        theme_summary = (
-            df["theme"]
-            .fillna("Unknown")
-            .value_counts()
-            .to_dict()
-        )
+    pain_point_summary = get_counts(
+        df,
+        find_column(df, ["pain_point", "pain point", "painpoint", "pain_points"])
+    )
 
-    else:
 
-        theme_summary = {}
+    # FEATURE REQUEST SUMMARY
 
-    # ==========================================
-    # 6. PAIN POINT
-    # ==========================================
+    feature_request_summary = get_counts(
+        df,
+        find_column(df, ["feature_request", "feature request", "feature", "feature_requests"])
+    )
 
-    if "pain_point" in df.columns:
 
-        pain_point_summary = (
-            df["pain_point"]
-            .fillna("Unknown")
-            .value_counts()
-            .to_dict()
-        )
+    # CATEGORY TRENDS
 
-    else:
+    category_trends = []
 
-        pain_point_summary = {}
+    if category_summary:
 
-    # ==========================================
-    # 7. FEATURE REQUEST
-    # ==========================================
+        category_trends = [
+            {
+                "Category": str(name),
+                "Count": int(count)
+            }
+            for name, count in category_summary.items()
+        ]
 
-    if "feature_request" in df.columns:
 
-        feature_request_summary = (
-            df["feature_request"]
-            .fillna("Unknown")
-            .value_counts()
-            .to_dict()
-        )
+    # THEME TRENDS
 
-    else:
+    theme_trends = []
 
-        feature_request_summary = {}
+    if theme_summary:
 
-    # ==========================================
-    # 8. RETURN
-    # ==========================================
+        theme_trends = [
+            {
+                "Theme": str(name),
+                "Count": int(count)
+            }
+            for name, count in theme_summary.items()
+        ]
+
+
+    # PAIN POINT TRENDS
+
+    pain_point_trends = []
+
+    if pain_point_summary:
+
+        pain_point_trends = [
+            {
+                "Pain Point": str(name),
+                "Count": int(count)
+            }
+            for name, count in pain_point_summary.items()
+        ]
+
+
+    # FEATURE REQUEST TRENDS
+
+    feature_request_trends = []
+
+    if feature_request_summary:
+
+        feature_request_trends = [
+            {
+                "Feature": str(name),
+                "Count": int(count)
+            }
+            for name, count in feature_request_summary.items()
+        ]
+
+
+    # SENTIMENT TRENDS
+
+    sentiment_trends = []
+
+    if sentiment_summary:
+
+        sentiment_trends = [
+            {
+                "Sentiment": str(name),
+                "Count": int(count)
+            }
+            for name, count in sentiment_summary.items()
+        ]
+
 
     return {
 
         "status": "success",
 
-        "total_feedback":
-            total_feedback,
+        "total_feedback": total_feedback,
 
-        "category_summary":
-            category_summary,
+        "category_summary": category_summary,
 
-        "sentiment_summary":
-            sentiment_summary,
+        "sentiment_summary": sentiment_summary,
 
-        "theme_summary":
-            theme_summary,
+        "theme_summary": theme_summary,
 
-        "pain_point_summary":
-            pain_point_summary,
+        "pain_point_summary": pain_point_summary,
 
-        "feature_request_summary":
-            feature_request_summary
+        "feature_request_summary": feature_request_summary,
+
+        "trend_report": {
+
+            "category_trends": category_trends,
+
+            "theme_trends": theme_trends,
+
+            "pain_point_trends": pain_point_trends,
+
+            "feature_request_trends": feature_request_trends,
+
+            "sentiment_trends": sentiment_trends
+
+        },
+
+        "category_trends": category_trends,
+
+        "theme_trends": theme_trends,
+
+        "pain_point_trends": pain_point_trends,
+
+        "feature_request_trends": feature_request_trends,
+
+        "sentiment_trends": sentiment_trends
+
     }

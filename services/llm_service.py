@@ -9,10 +9,6 @@ from dotenv import load_dotenv
 from groq import Groq
 
 
-# =========================================================
-# LOAD ENVIRONMENT VARIABLES
-# =========================================================
-
 load_dotenv()
 
 
@@ -20,38 +16,23 @@ class LLMService:
 
     def __init__(self):
 
-        # =================================================
-        # GROQ API KEY
-        # =================================================
-
-        api_key = os.getenv(
-            "GROQ_API_KEY"
-        )
+        api_key = os.getenv("GROQ_API_KEY")
 
         if not api_key:
-
             raise ValueError(
                 "GROQ_API_KEY is not configured in .env"
             )
-
-        # =================================================
-        # GROQ CLIENT
-        # =================================================
 
         self.client = Groq(
             api_key=api_key
         )
 
-        # =================================================
-        # GROQ MODEL
-        # =================================================
+        # Use the model that we already tested successfully
+        self.model = "openai/gpt-oss-20b"
 
-        self.model = (
-            "openai/gpt-oss-120b"
-        )
 
     # =====================================================
-    # GENERATE RESPONSE
+    # GENERATE
     # =====================================================
 
     def generate(
@@ -59,29 +40,14 @@ class LLMService:
         prompt
     ):
 
-        print(
-            "\n"
-            + "=" * 60
-        )
+        print("\n" + "=" * 60)
+        print("GROQ LLM REQUEST")
+        print("=" * 60)
 
-        print(
-            "Using Groq model:",
-            self.model
-        )
-
-        print(
-            "=" * 60
-        )
+        print("Model:", self.model)
+        print("Prompt length:", len(prompt))
 
         try:
-
-            print(
-                "Sending request to Groq..."
-            )
-
-            # =================================================
-            # GROQ API CALL
-            # =================================================
 
             response = (
                 self.client
@@ -98,114 +64,59 @@ class LLMService:
                         }
                     ],
 
-                    temperature=0.2
+                    temperature=0.2,
+
+                    max_tokens=4000
                 )
             )
 
-            # =================================================
-            # VALIDATE RESPONSE
-            # =================================================
-
-            if response is None:
-
-                raise RuntimeError(
-                    "Groq returned no response."
-                )
-
-            if not response.choices:
-
-                raise RuntimeError(
-                    "Groq returned no choices."
-                )
-
-            text = (
-                response
-                .choices[0]
-                .message
-                .content
+            print(
+                "Finish reason:",
+                response.choices[0].finish_reason
             )
 
-            if not text:
+            message = response.choices[0].message
+
+            content = message.content
+
+            # GPT-OSS can sometimes put reasoning separately.
+            if not content:
+
+                reasoning = getattr(
+                    message,
+                    "reasoning_content",
+                    None
+                )
+
+                if reasoning:
+                    content = reasoning
+
+            if not content:
 
                 raise RuntimeError(
                     "Groq returned an empty response."
                 )
 
             print(
-                "Groq response received."
+                "Response length:",
+                len(content)
             )
 
-            return text.strip()
+            return content.strip()
 
-        # =====================================================
-        # ERROR HANDLING
-        # =====================================================
 
         except Exception as e:
 
-            error_text = str(
-                e
-            )
+            error_text = str(e)
 
             print(
-                "\nGroq error:"
+                "\nGROQ ERROR:"
             )
 
             print(
                 error_text
             )
 
-            # -----------------------------------------------
-            # MODEL NOT FOUND
-            # -----------------------------------------------
-
-            if (
-                "model_not_found"
-                in error_text.lower()
-                or
-                "404"
-                in error_text
-            ):
-
-                raise RuntimeError(
-
-                    f"Groq model "
-                    f"'{self.model}' "
-                    "is unavailable or "
-                    "not accessible."
-
-                ) from e
-
-            # -----------------------------------------------
-            # RATE LIMIT / QUOTA
-            # -----------------------------------------------
-
-            if (
-                "429"
-                in error_text
-                or
-                "rate_limit"
-                in error_text.lower()
-                or
-                "rate limit"
-                in error_text.lower()
-            ):
-
-                raise RuntimeError(
-
-                    "Groq API rate limit or "
-                    "quota exceeded. "
-                    "Please wait and try again."
-
-                ) from e
-
-            # -----------------------------------------------
-            # OTHER ERRORS
-            # -----------------------------------------------
-
             raise RuntimeError(
-
-                f"Groq generation failed: "
-                f"{error_text}"
-
+                f"Groq generation failed: {error_text}"
             ) from e

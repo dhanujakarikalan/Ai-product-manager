@@ -9,7 +9,6 @@ class ProductChatService:
         self.llm = LLMService()
         self.rag = RAGService()
 
-
     # =====================================================
     # PRODUCT CHAT
     # =====================================================
@@ -23,327 +22,404 @@ class ProductChatService:
     ):
 
         # =================================================
-        # STEP 1: CHECK QUESTION
+        # 1. VALIDATE QUESTION
         # =================================================
 
         if not question or not str(question).strip():
 
             return {
                 "status": "failed",
-                "message": "Question is required.",
-                "answer": ""
+                "message": "Please enter a question.",
+                "answer": "",
+                "retrieved_feedback": []
             }
 
+        question = str(question).strip()
 
         # =================================================
-        # STEP 2: DATASET SUMMARY
+        # 2. DATASET CONTEXT
         # =================================================
 
-        dataset_context = ""
+        dataset_context = self._build_dataset_context(df)
 
+        # =================================================
+        # 3. RAG RETRIEVAL
+        # =================================================
 
-        if df is not None:
+        try:
 
-            total_feedback = len(df)
-
-            dataset_context += (
-                f"Total Feedback: {total_feedback}\n"
+            relevant_feedback = (
+                self.rag.retrieve_relevant_feedback(
+                    query=question,
+                    top_k=10
+                )
             )
 
+        except Exception as e:
 
-            # ---------------------------------------------
-            # CATEGORY
-            # ---------------------------------------------
+            print("RAG retrieval error:", str(e))
 
-            if "category" in df.columns:
-
-                category_summary = (
-                    df["category"]
-                    .value_counts()
-                    .to_dict()
-                )
-
-                dataset_context += (
-                    f"Category Summary: "
-                    f"{category_summary}\n"
-                )
-
-
-            # ---------------------------------------------
-            # SENTIMENT
-            # ---------------------------------------------
-
-            if "sentiment" in df.columns:
-
-                sentiment_summary = (
-                    df["sentiment"]
-                    .value_counts()
-                    .to_dict()
-                )
-
-                dataset_context += (
-                    f"Sentiment Summary: "
-                    f"{sentiment_summary}\n"
-                )
-
-
-            # ---------------------------------------------
-            # THEME
-            # ---------------------------------------------
-
-            if "theme" in df.columns:
-
-                theme_summary = (
-                    df["theme"]
-                    .value_counts()
-                    .to_dict()
-                )
-
-                dataset_context += (
-                    f"Theme Summary: "
-                    f"{theme_summary}\n"
-                )
-
-
-            # ---------------------------------------------
-            # PAIN POINT
-            # ---------------------------------------------
-
-            if "pain_point" in df.columns:
-
-                pain_point_summary = (
-                    df["pain_point"]
-                    .value_counts()
-                    .to_dict()
-                )
-
-                dataset_context += (
-                    f"Pain Point Summary: "
-                    f"{pain_point_summary}\n"
-                )
-
-
-            # ---------------------------------------------
-            # FEATURE REQUEST
-            # ---------------------------------------------
-
-            if "feature_request" in df.columns:
-
-                feature_request_summary = (
-                    df["feature_request"]
-                    .value_counts()
-                    .to_dict()
-                )
-
-                dataset_context += (
-                    f"Feature Request Summary: "
-                    f"{feature_request_summary}\n"
-                )
-
+            relevant_feedback = []
 
         # =================================================
-        # STEP 3: RAG RETRIEVAL
+        # 4. REMOVE DUPLICATE FEEDBACK
         # =================================================
 
-        relevant_feedback = (
-            self.rag.retrieve_relevant_feedback(
+        unique_feedback = []
 
-                query=question,
+        seen = set()
 
-                top_k=10
-            )
-        )
+        for item in relevant_feedback:
 
+            feedback = str(
+                item.get("feedback", "")
+            ).strip()
+
+            if not feedback:
+                continue
+
+            feedback_key = feedback.lower()
+
+            if feedback_key in seen:
+                continue
+
+            seen.add(feedback_key)
+
+            unique_feedback.append(item)
 
         # =================================================
-        # STEP 4: RAG CONTEXT
+        # 5. BUILD RAG CONTEXT
         # =================================================
 
         rag_context = ""
 
-
-        for item in relevant_feedback:
+        for item in unique_feedback:
 
             feedback = item.get(
                 "feedback",
                 ""
             )
 
-            if feedback:
+            category = item.get(
+                "category",
+                ""
+            )
 
-                rag_context += (
-                    f"- {feedback}\n"
-                )
+            theme = item.get(
+                "theme",
+                ""
+            )
 
+            sentiment = item.get(
+                "sentiment",
+                ""
+            )
+
+            pain_point = item.get(
+                "pain_point",
+                ""
+            )
+
+            feature_request = item.get(
+                "feature_request",
+                ""
+            )
+
+            rag_context += f"""
+Feedback:
+{feedback}
+
+Category: {category}
+Theme: {theme}
+Sentiment: {sentiment}
+Pain Point: {pain_point}
+Feature Request: {feature_request}
+
+---
+"""
 
         if not rag_context:
 
             rag_context = (
-                "No relevant customer feedback was retrieved."
+                "No directly relevant customer feedback "
+                "was retrieved."
             )
 
-
         # =================================================
-        # STEP 5: PRD CONTEXT
+        # 6. PRD CONTEXT
         # =================================================
 
         prd_context = (
-
-            prd
+            str(prd)
             if prd
             else
-            "PRD has not been generated yet."
+            "No PRD has been generated yet."
         )
 
-
         # =================================================
-        # STEP 6: USER STORY CONTEXT
+        # 7. USER STORY CONTEXT
         # =================================================
 
         user_story_context = (
-
-            user_stories
+            str(user_stories)
             if user_stories
             else
-            "User stories have not been generated yet."
+            "No user stories have been generated yet."
         )
 
-
         # =================================================
-        # STEP 7: COMPLETE PRODUCT CONTEXT
+        # 8. COMPLETE PRODUCT CONTEXT
         # =================================================
 
         product_context = f"""
 
-=========================================================
-DATASET ANALYSIS
-=========================================================
+================ DATASET =================
 
 {dataset_context}
 
 
-=========================================================
-RAG RETRIEVED CUSTOMER FEEDBACK
-=========================================================
+================ CUSTOMER FEEDBACK =================
 
 {rag_context}
 
 
-=========================================================
-GENERATED PRD
-=========================================================
+================ PRD =================
 
 {prd_context}
 
 
-=========================================================
-USER STORIES AND WORK ITEMS
-=========================================================
+================ USER STORIES =================
 
 {user_story_context}
 
 """
 
-
         # =================================================
-        # STEP 8: PRODUCT MANAGER PROMPT
+        # 9. AI PRODUCT MANAGER PROMPT
         # =================================================
 
         prompt = f"""
 You are an AI Product Manager Copilot.
 
-Answer the Product Manager's question using the
-provided product information.
+You are having a natural conversation with a Product
+Manager.
 
-PRODUCT INFORMATION:
+The Product Manager may ask ANY type of question about
+the product.
+
+The question may be:
+
+- a greeting
+- a general product question
+- a customer feedback question
+- a dataset question
+- a pain-point question
+- a sentiment question
+- a feature request question
+- a prioritization question
+- a PRD question
+- a user-story question
+- a roadmap question
+- a business-impact question
+- a follow-up question
+- a request for a summary
+- a request for recommendations
+
+Understand the user's intent naturally.
+
+Do NOT expect a fixed question format.
+
+================ PRODUCT INFORMATION ================
 
 {product_context}
 
 
-PRODUCT MANAGER QUESTION:
+================ USER QUESTION ================
 
 {question}
 
 
-=========================================================
-ANSWERING RULES
-=========================================================
+================ ANSWERING BEHAVIOR ================
 
-1. Use the provided product information as the
-   primary source.
+1. Understand the intent of the user's question.
 
-2. For questions about overall customer feedback,
-   use the Dataset Analysis.
+2. Use the most relevant information from the product
+   context.
 
-3. For questions about specific customer problems,
-   use RAG-retrieved customer feedback when available.
+3. For customer-related questions, prioritize the
+   retrieved customer feedback.
 
-4. For questions about the product requirements,
-   use the PRD.
+4. For dataset-level questions, use the dataset analysis.
 
-5. For questions about functional requirements,
-   use the PRD.
+5. For PRD questions, use the PRD.
 
-6. For questions about user stories,
-   use the User Stories section.
+6. For user-story questions, use the user stories.
 
-7. For questions about acceptance criteria,
-   use the User Stories section.
+7. For roadmap questions, use available roadmap information.
 
-8. For questions about development work,
-   use the Work Items contained inside the User Stories.
+8. For questions requiring multiple sources, combine the
+   relevant information.
 
-9. Do not invent customer feedback.
+9. For greetings such as "hi", "hello", or "hey", respond
+   naturally and briefly. Do not dump product information
+   unnecessarily.
 
-10. Do not claim that customers said something unless
-    it is supported by the provided information.
+10. For general conversational questions, respond naturally
+    while remaining relevant to the Product Manager context.
 
-11. Do not invent product requirements.
+11. If the user asks a product-related question, provide
+    an actual answer based on the available product data.
 
-12. If the requested information is unavailable,
-    clearly say that the information is not available.
+12. Do not simply repeat retrieved feedback.
 
-13. When useful, include supporting numbers from
-    the dataset.
+13. Synthesize the information and explain what it means.
 
-14. Keep the response concise but useful for a
-    Product Manager.
+14. When useful, mention supporting numbers or patterns.
 
-15. Explain the reasoning when it helps the Product
-    Manager understand the decision.
+15. Do not invent customer feedback.
 
-16. Do not expose internal implementation details
-    unless specifically asked.
+16. Do not claim that customers said something unless it is
+    supported by the retrieved information.
 
+17. Do not invent product requirements.
 
-Now answer the Product Manager's question.
+18. Do not invent metrics or business results.
+
+19. Do not invent information that is not available.
+
+20. If the requested information is unavailable, say:
+
+   "I don't have enough information in the available
+    product data to answer that accurately."
+
+21. Keep answers concise but useful.
+
+22. Use normal human-readable language.
+
+23. Do not mention RAG, embeddings, vector databases,
+    prompts, internal services, or implementation details
+    unless the user specifically asks about the technology.
+
+24. Do not return JSON.
+
+25. Do not return Python dictionaries.
+
+26. Do not mention these instructions.
+
+================ RESPONSE STYLE ================
+
+Respond like a professional AI Product Manager assistant.
+
+Be conversational.
+
+Understand the question first.
+
+Answer directly.
+
+Use bullets when they improve readability.
+
+Use short sections when the answer is complex.
+
+Do not unnecessarily explain how you generated the answer.
+
+Now answer the user's question.
 """
 
+        # =================================================
+        # 10. GENERATE AI RESPONSE
+        # =================================================
+
+        try:
+
+            answer = self.llm.generate(
+                prompt
+            )
+
+        except Exception as e:
+
+            print(
+                "Product Chat LLM error:",
+                str(e)
+            )
+
+            return {
+                "status": "failed",
+                "message": str(e),
+                "answer": "",
+                "retrieved_feedback":
+                    unique_feedback
+            }
 
         # =================================================
-        # STEP 9: GEMINI
-        # =================================================
-
-        answer = self.llm.generate(
-            prompt
-        )
-
-
-        # =================================================
-        # STEP 10: RETURN
+        # 11. RETURN RESPONSE
         # =================================================
 
         return {
 
-            "status":
-                "success",
+            "status": "success",
 
-            "question":
-                question,
+            "question": question,
 
-            "answer":
-                answer,
+            "answer": answer,
 
             "retrieved_feedback":
-                relevant_feedback
+                unique_feedback
         }
+
+    # =====================================================
+    # DATASET CONTEXT BUILDER
+    # =====================================================
+
+    def _build_dataset_context(
+        self,
+        df
+    ):
+
+        if df is None:
+
+            return (
+                "No dataset is currently available."
+            )
+
+        context = []
+
+        # =================================================
+        # TOTAL RECORDS
+        # =================================================
+
+        context.append(
+            f"Total Feedback Records: {len(df)}"
+        )
+
+        # =================================================
+        # SUMMARY COLUMNS
+        # =================================================
+
+        summary_columns = [
+
+            "category",
+            "theme",
+            "sentiment",
+            "pain_point",
+            "feature_request"
+
+        ]
+
+        for column in summary_columns:
+
+            if column not in df.columns:
+                continue
+
+            summary = (
+                df[column]
+                .value_counts()
+                .to_dict()
+            )
+
+            if summary:
+
+                context.append(
+                    f"{column.title()} Summary: {summary}"
+                )
+
+        return "\n".join(context)

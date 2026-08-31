@@ -12,9 +12,7 @@ from services import app_state
 # =========================================================
 
 router = APIRouter(
-
     prefix="/user-story",
-
     tags=["User Story Generation"]
 )
 
@@ -29,20 +27,16 @@ user_story_service = (
 
 
 # =========================================================
-# GENERATE USER STORIES + WORK ITEMS
+# GENERATE USER STORIES
 # =========================================================
 
 @router.post("/generate")
 def generate_user_stories(
 
     count: int = Query(
-
         default=10,
-
         ge=1,
-
         le=50,
-
         description=(
             "Number of prioritized user stories "
             "to generate."
@@ -51,42 +45,141 @@ def generate_user_stories(
 
 ):
 
-    # =====================================================
-    # STEP 1: CHECK PRD
-    # =====================================================
+    try:
 
-    if not app_state.generated_prd:
+        # =================================================
+        # CHECK DATASET
+        # =================================================
 
-        raise HTTPException(
+        if app_state.processed_df is None:
 
-            status_code=400,
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "No processed dataset found. "
+                    "Please upload and process a dataset first."
+                )
+            )
 
-            detail=(
-                "Please generate PRD first."
+
+        # =================================================
+        # CHECK GENERATED PRD
+        # =================================================
+
+        if not app_state.generated_prd:
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Dataset is available, but no PRD has "
+                    "been generated yet. Please generate the "
+                    "PRD before creating user stories."
+                )
+            )
+
+
+        # =================================================
+        # GET PRD
+        # =================================================
+
+        prd = app_state.generated_prd
+
+
+        # =================================================
+        # NORMALIZE PRD
+        #
+        # The PRD generator may return a string or a dict.
+        # User Story generation needs readable text.
+        # =================================================
+
+        if isinstance(
+            prd,
+            dict
+        ):
+
+            prd_text = (
+
+                prd.get("prd")
+
+                or prd.get("content")
+
+                or prd.get("text")
+
+                or prd.get("markdown")
+
+                or str(prd)
+
+            )
+
+        else:
+
+            prd_text = str(
+                prd
+            )
+
+
+        # =================================================
+        # VALIDATE PRD TEXT
+        # =================================================
+
+        if not prd_text.strip():
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "The generated PRD is empty. "
+                    "Please generate the PRD again."
+                )
+            )
+
+
+        print(
+            "\n" + "=" * 60
+        )
+
+        print(
+            "USER STORY API"
+        )
+
+        print(
+            "=" * 60
+        )
+
+        print(
+            "Dataset rows:",
+            len(
+                app_state.processed_df
             )
         )
 
+        print(
+            "PRD available:",
+            True
+        )
 
-    # =====================================================
-    # STEP 2: GET PRD
-    # =====================================================
+        print(
+            "PRD length:",
+            len(prd_text)
+        )
 
-    prd = app_state.generated_prd
+        print(
+            "Requested stories:",
+            count
+        )
 
 
-    # =====================================================
-    # STEP 3: GENERATE USER STORIES
-    # =====================================================
-
-    try:
+        # =================================================
+        # GENERATE USER STORIES
+        # =================================================
 
         result = (
             user_story_service
             .generate_user_stories(
 
-                prd=prd,
+                prd=prd_text,
 
                 count=count
+
             )
         )
 
@@ -95,7 +188,20 @@ def generate_user_stories(
         # CHECK RESULT
         # =================================================
 
-        if result.get("status") != "success":
+        if not result:
+
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "User Story service returned "
+                    "an empty response."
+                )
+            )
+
+
+        if result.get(
+            "status"
+        ) != "success":
 
             raise HTTPException(
 
@@ -106,7 +212,9 @@ def generate_user_stories(
                     "message",
 
                     "User story generation failed."
+
                 )
+
             )
 
 
@@ -114,12 +222,18 @@ def generate_user_stories(
         # STORE USER STORIES
         # =================================================
 
-        app_state.generated_user_stories = (
+        generated_stories = (
 
             result.get(
                 "user_stories",
                 ""
             )
+
+        )
+
+
+        app_state.generated_user_stories = (
+            generated_stories
         )
 
 
@@ -133,13 +247,23 @@ def generate_user_stories(
                 "success",
 
             "message":
-                "User stories and work items generated successfully.",
+                (
+                    "User stories and work items "
+                    "generated successfully."
+                ),
 
             "requested_count":
                 count,
 
+            "count":
+                result.get(
+                    "count",
+                    count
+                ),
+
             "user_stories":
-                app_state.generated_user_stories
+                generated_stories
+
         }
 
 
@@ -150,11 +274,21 @@ def generate_user_stories(
 
     except Exception as e:
 
+        print(
+            "\nUSER STORY GENERATION ERROR:"
+        )
+
+        print(
+            str(e)
+        )
+
         raise HTTPException(
 
             status_code=500,
 
             detail=(
-                f"User story generation failed: {str(e)}"
+                "User story generation failed: "
+                f"{str(e)}"
             )
+
         )
