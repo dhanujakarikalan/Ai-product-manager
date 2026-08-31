@@ -661,3 +661,4 @@ Add the project's selected license here before publishing a public production re
 **React + Vite → FastAPI → Data Processing → Analytics → RAG/Retrieval → AI Product Generation → PRD → User Stories → Prioritization → Roadmap/Milestone Recommendations → Product Chat**
 
 The architecture is intentionally modular so that the Product Manager experience can evolve without tightly coupling the UI to backend implementation details.
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/2c5f2ad0-0b5b-4734-9518-f12b9702970d" />
